@@ -1,0 +1,70 @@
+# Go Sign Server
+
+The Go Sign Server service's functionality is to **add digital signatures to PDF documents**.
+
+## Configuration
+
+Configuration of the service is done through setting the following environment variables before starting the service.
+
+| Environment Variable        | Default Value                         | Description                                                                                                                                                                       |
+|-----------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SIGN_SERVER_HTTP_PORT       | 4648                                  | The port that this service's HTTP server listens on.                                                                                                                              |
+| SIGN_SERVER_PKCS11_LIB_PATH | /usr/local/lib/softhsm/libsofthsm2.so | The path to the PKCS#11 library.                                                                                                                                                  |
+| SIGN_SERVER_TOKEN_SLOT      |                                       | *Required; select the token with this slot identifier to look into for the private and public key pair and their corresponding certificate; has preference over serial and label. |
+| SIGN_SERVER_TOKEN_SERIAL    |                                       | *Required; select the token with this serial identifier to look into for the private and public key pair and their corresponding certificate; has preference over label.          |
+| SIGN_SERVER_TOKEN_LABEL     |                                       | *Required; select the token with this label to look into for the private and public key pair and their corresponding certificate.                                                 |
+| SIGN_SERVER_TOKEN_PIN       |                                       | Optional; the token pin for login.                                                                                                                                                |
+
+> *Required: one way to select a token must be provided; in other words, at least one of the `SIGN_SERVER_TOKEN_SLOT`, `SIGN_SERVER_TOKEN_SERIAL`, and `SIGN_SERVER_TOKEN_LABEL` environment variables must be set.
+
+> Do not forget to load your HSM's specific configuration if there are any (the HSM behind the PKCS#11 interface implemented by the provided library); it is usually done through setting a specific environment variable, for example `SOFTHSM2_CONF=/home/user/config.file` when using SoftHSMv2 with a custom configuration.
+
+## API
+
+There is only one HTTP API endpoint.
+
+### POST /v1/sign
+
+Receives a digital signature information JSON object beside a PDF document, both bundled in a `multipart/mixed` request; returns the signed PDF document.
+
+Example request:
+
+```text
+POST /v1/sign HTTP/2
+Content-Type: multipart/mixed; boundary=------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Length: ...
+Accept: application/pdf
+
+--------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Type: application/json
+
+{
+	"type": "certification",
+	"docMdp": "no-changes",
+	"signerInfo": {
+		"name": "Alireza",
+		"location": "Iran",
+		"reason": "Sealing",
+		"contactInfo": "agcombest@gmail.com"
+	}
+}
+
+--------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Type: application/pdf
+
+%PDF-1.7...
+...
+...%%EOF
+--------------------------2lllWzF6kb9cgoKNL2ZEJY--
+```
+
+Example response:
+
+```text
+HTTP/2 200
+content-type: application/pdf
+
+%PDF-1.7...
+...
+...%%EOF
+```
