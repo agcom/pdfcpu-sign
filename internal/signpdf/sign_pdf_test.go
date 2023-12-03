@@ -90,9 +90,9 @@ func TestPDFSigner_Sign(t *testing.T) {
 		DocMDPPerm: pdfsign.DoNotAllowAnyChangesPerms,
 		Info: pdfsign.SignDataSignatureInfo{
 			Name:        "Alireza",
-			Location:    "Iran",
-			Reason:      "To see if the signing with the PKCS#11 works.",
-			ContactInfo: "agcombest@gmail.com",
+			Location:    "Earth",
+			Reason:      "Sealing",
+			ContactInfo: "example@example.com",
 			Date:        time.Now(),
 		},
 	})

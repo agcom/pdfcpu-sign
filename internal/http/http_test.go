@@ -119,9 +119,9 @@ func Test_postSign(t *testing.T) {
 		DocMdp: model.DocMdpNoChanges,
 		SignerInfo: model.SignerInfo{
 			Name:        "Alireza",
-			Location:    "Iran",
-			Reason:      "To prove that the API works.",
-			ContactInfo: "agcombest@gmail.com",
+			Location:    "Earth",
+			Reason:      "Sealing",
+			ContactInfo: "example@example.com",
 		},
 	}
 	signInfoJsonBytes, err := json.Marshal(signInfo)

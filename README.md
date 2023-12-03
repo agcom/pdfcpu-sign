@@ -43,9 +43,9 @@ Content-Type: application/json
 	"docMdp": "no-changes",
 	"signerInfo": {
 		"name": "Alireza",
-		"location": "Iran",
+		"location": "Earth",
 		"reason": "Sealing",
-		"contactInfo": "agcombest@gmail.com"
+		"contactInfo": "example@example.com"
 	}
 }
 

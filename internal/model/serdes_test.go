@@ -11,9 +11,9 @@ var testSignInfo = SignInfo{
 	DocMdp: DocMdpNoChanges,
 	SignerInfo: SignerInfo{
 		Name:        "Alireza",
-		Location:    "Iran",
+		Location:    "Earth",
 		Reason:      "Sealing",
-		ContactInfo: "agcombest@gmail.com",
+		ContactInfo: "example@example.com",
 	},
 }
 
@@ -22,9 +22,9 @@ var testSignInfoJsonStr = `{
 	"docMdp": "no-changes",
 	"signerInfo": {
 		"name": "Alireza",
-		"location": "Iran",
+		"location": "Earth",
 		"reason": "Sealing",
-		"contactInfo": "agcombest@gmail.com"
+		"contactInfo": "example@example.com"
 	}
 }`
 
