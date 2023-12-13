@@ -19,13 +19,12 @@ func InitCrypto11Ctx() error {
 		TokenSerial:     TokenSerial,
 		TokenLabel:      TokenLabel,
 		Pin:             TokenPin,
-		MaxSessions:     0,               // TODO: why open concurrent sessions? Just open a session with support for concurrency (or else concurrent sessions would not help anyway?)!
+		MaxSessions:     0,               // TODO: why open concurrent sessions? Just open a session with support for concurrency (or else concurrent sessions would not help anyway? Or would they?)?
 		PoolWaitTimeout: 7 * time.Second, // TODO: pick a good timeout value and properly handle ErrTimeOut (from package github.com/thales-e-security/pool) to respond with HTTP 503 status code.
 	})
 	if err != nil {
 		return fmt.Errorf("crypto11 context initialization failed; %w", err)
 	}
-	// TODO: C11Ctx.Close() on graceful shutdown (on application context done).
 
 	return nil
 }
@@ -34,7 +33,6 @@ var Key crypto.Signer
 var Cert *x509.Certificate
 
 func InitKert() error {
-	// TODO: find the private key, the public key, and the public key certificate by explicitly identifying it via configurations; doing so removes the security concern of un-deterministic behavior on HSM changes.
 	kerts, err := C11Ctx.FindAllPairedCertificates()
 	if err != nil {
 		return fmt.Errorf("fetching keys/certs failed; %w", err)

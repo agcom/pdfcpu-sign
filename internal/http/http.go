@@ -17,7 +17,6 @@ import (
 	"os"
 )
 
-// TODO: recieve context.
 func Run() {
 	r := chi.NewRouter()
 
@@ -224,15 +223,12 @@ func postSignExtractJsonPart(part *multipart.Part) (*model.SignInfo, error, int)
 		return nil, fmt.Errorf("Unmarshaling the JSON part failed; %w", err), http.StatusBadRequest
 	}
 
-	// TODO: validate the signInfo; no SingerInfo.Date should be set; if it is SignTypeApproval, DocMdp should not be set.
-
 	return &signInfo, nil, 0
 }
 
 //goland:noinspection GoErrorStringFormat
 func postSignExtractPdfPart(part *multipart.Part) (*os.File, error, int) {
 	// Flush the body (supposedly of type PDF) into a temporary file.
-	// TODO: do the signing in the memory for faster results and to reduce security concerns (although I can not think of any such concern).
 	inFile, err := os.CreateTemp("", "sign-server-input-*.pdf")
 	if err != nil {
 		slog.Error("Creating a temporary file for an input PDF failed.", "error", err)

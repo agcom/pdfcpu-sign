@@ -1,4 +1,4 @@
-// TODO: promote the package to a decoupled package?
+// TODO: promote the package to decoupled?
 package signpdf
 
 import (
@@ -27,9 +27,7 @@ func NewPdfSigner(key crypto.Signer, cert *x509.Certificate) *PdfSigner {
 
 // Sign function signs the input PDF file and writes it to the output (calls os.Create on the output file).
 func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignature) error {
-	// TODO: ctx function parameter.
-	// TODO: authenticate the signature information (signInfo)?
-	signData.Info.Date = time.Now() // TODO: let the user reset the sign date.
+	signData.Info.Date = time.Now()
 
 	// Read the PDF version.
 	pdfCtx, err := pdfcpu.ReadFile(input, nil)
@@ -57,7 +55,7 @@ func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignat
 		TSA: pdfsign.TSA{
 			URL: "https://freetsa.org/tsr",
 		},
-		RevocationData:     revocation.InfoArchival{}, // TODO: figure out revocation fields (from the product manager); also, these two fields are explicitly experimental.
+		RevocationData:     revocation.InfoArchival{},
 		RevocationFunction: pdfsign.DefaultEmbedRevocationStatusFunction,
 	})
 

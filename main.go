@@ -7,8 +7,6 @@ import (
 	"log/slog"
 )
 
-// TODO: application context
-// TODO: use context in all slog function calls.
 func main() {
 	err := p11.InitCrypto11Ctx()
 	if err != nil {

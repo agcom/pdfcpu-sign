@@ -37,7 +37,6 @@ func init() {
 	TokenSerial = viper.GetString(tokenSerialConfKey)
 	TokenLabel = viper.GetString(tokenLabelConfKey)
 
-	// TODO: make sure that logging the slot number or token serial or token label is not considered a security concern.
 	if viper.IsSet(tokenSlotConfKey) && viper.GetString(tokenSlotConfKey) != "" { // Token slot can be 0; thus can not use TokenSlot != 0 as the condition.
 		slog.Info("Using the given slot number to identify the token.", "slot", TokenSlot)
 		if TokenSerial != "" {
@@ -59,8 +58,6 @@ func init() {
 	} else {
 		log.Panicln("No way to identify the token is provided.")
 	}
-
-	// TODO: fetch x508.VerifyOptions.Roots and x509.VerifyOptions.Intermediates as configurations to be used for certificate verification.
 }
 
 const tokenPinConfKey = "token_pin"

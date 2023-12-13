@@ -5,6 +5,7 @@ import (
 	"github.com/agcom/pdfcpu-sign/internal/signpdf"
 )
 
+// TODO: move this to a more appropriate place?
 var pdfSigner *signpdf.PdfSigner
 
 func InitPdfSigner() error {
