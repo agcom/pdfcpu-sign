@@ -19,7 +19,7 @@ func init() {
 func getHttpPortConf() (int, error) {
 	portAny := viper.Get(httpPortConfKey)
 	if portAny == nil {
-		return 0, fmt.Errorf("port conf not found (wraps: %w)", os.ErrNotExist) // TODO: create and use our own ErrNotExists.
+		return 0, fmt.Errorf("port conf not found (wraps: %w)", os.ErrNotExist) // TODO (minor improvement): create and use our own ErrNotExists.
 	}
 
 	if port, err := cast.ToIntE(portAny); err != nil {

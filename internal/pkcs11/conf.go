@@ -95,7 +95,7 @@ func getTokenPinConf() (string, error) {
 	pinAny := viper.Get(tokenPinConfKey)
 
 	if pinAny == nil {
-		return "", fmt.Errorf("no token pin conf provided (wraps: %w)", os.ErrNotExist) // TODO: create and use our own not exists error.
+		return "", fmt.Errorf("no token pin conf provided (wraps: %w)", os.ErrNotExist) // TODO (minor improvement): create and use our own not exists error.
 	}
 
 	pin, err := cast.ToStringE(pinAny)
@@ -111,7 +111,7 @@ func getKertIdsConf() (id []byte, label string, err error) {
 	labelAny := viper.Get(kertLabelConfKey)
 
 	if idHexAny == nil && labelAny == nil {
-		err = fmt.Errorf("no kert identifier provided (wraps: %w)", os.ErrNotExist) // TODO: create and use our own not exists error.
+		err = fmt.Errorf("no kert identifier provided (wraps: %w)", os.ErrNotExist) // TODO (minor improvement): create and use our own not exists error.
 		return
 	}
 

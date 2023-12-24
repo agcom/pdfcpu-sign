@@ -44,7 +44,7 @@ func AddTestKeyPair(crypto11Ctx *crypto11.Context) ([]byte, error) {
 	keyId := make([]byte, 7)
 	_, _ = io.ReadFull(rnd, keyId) // Would not error as long as using pseudo random number generator.
 
-	// TODO: generate the key using the rsa package and then import it into the token.
+	// TODO (minor improvement): generate the key using the pdfcpusign/testutils package and then import it into the token.
 	_, err := crypto11Ctx.GenerateRSAKeyPair(keyId, 2048)
 	if err != nil {
 		return nil, fmt.Errorf("generating and adding RSA key failed; %w", err)

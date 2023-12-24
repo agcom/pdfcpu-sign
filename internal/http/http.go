@@ -224,7 +224,7 @@ func postSignRequestBodyExtract(r *http.Request) (*os.File, *signpdf.SignInfo, e
 
 //goland:noinspection GoErrorStringFormat
 func postSignExtractJsonPart(part *multipart.Part) (*signpdf.SignInfo, error, int) {
-	// TODO: honor the charset in the content-type header params.
+	// TODO (minor improvement): honor the charset in the content-type header params.
 	jsonBytes, err := io.ReadAll(part)
 	if err != nil {
 		return nil, fmt.Errorf("Reading the JSON part's bytes failed; %w", err), http.StatusBadRequest
