@@ -4,7 +4,6 @@
 services:
   softhsm:
     build:
-      context: ./softhsm2/
       dockerfile: ./Dockerfile
     volumes:
       - softhsm:/var/lib/softhsm/
@@ -12,7 +11,6 @@ services:
       - test-compose.env
   softhsm2go:
     build:
-      context: ./softhsm2/
       dockerfile: ./Dockerfile-go
     volumes:
       - softhsm:/var/lib/softhsm/
