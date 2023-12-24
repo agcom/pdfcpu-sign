@@ -1,21 +1,23 @@
 # Go Sign Server
 
-The Go Sign Server service's functionality is to **add digital signatures to PDF documents**.
+The Go Sign Server service's functionality is **adding digital signatures to PDF documents**.
 
 ## Configuration
 
 Configuration of the service is done through setting the following environment variables before starting the service.
 
-| Environment Variable        | Default Value                         | Description                                                                                                                                                                       |
-|-----------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| SIGN_SERVER_HTTP_PORT       | 4648                                  | The port that this service's HTTP server listens on.                                                                                                                              |
-| SIGN_SERVER_PKCS11_LIB_PATH | /usr/local/lib/softhsm/libsofthsm2.so | The path to the PKCS#11 library.                                                                                                                                                  |
-| SIGN_SERVER_TOKEN_SLOT      |                                       | *Required; select the token with this slot identifier to look into for the private and public key pair and their corresponding certificate; has preference over serial and label. |
-| SIGN_SERVER_TOKEN_SERIAL    |                                       | *Required; select the token with this serial identifier to look into for the private and public key pair and their corresponding certificate; has preference over label.          |
-| SIGN_SERVER_TOKEN_LABEL     |                                       | *Required; select the token with this label to look into for the private and public key pair and their corresponding certificate.                                                 |
-| SIGN_SERVER_TOKEN_PIN       |                                       | Optional; the token pin for login.                                                                                                                                                |
+| Environment Variable            | Default Value                         | Description                                                                                                                                                                       |
+|---------------------------------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SIGN_SERVER_HTTP_PORT           | 4648                                  | The port that this service's HTTP server listens on.                                                                                                                              |
+| SIGN_SERVER_PKCS11_LIB_PATH     | /usr/local/lib/softhsm/libsofthsm2.so | The path to the PKCS#11 library.                                                                                                                                                  |
+| SIGN_SERVER_PKCS11_TOKEN_SLOT   |                                       | *Required; select the token with this slot identifier to look into for the private and public key pair and their corresponding certificate; has preference over serial and label. |
+| SIGN_SERVER_PKCS11_TOKEN_SERIAL |                                       | *Required; select the token with this serial identifier to look into for the private and public key pair and their corresponding certificate; has preference over label.          |
+| SIGN_SERVER_PKCS11_TOKEN_LABEL  |                                       | *Required; select the token with this label to look into for the private and public key pair and their corresponding certificate.                                                 |
+| SIGN_SERVER_PKCS11_TOKEN_PIN    |                                       | Optional; the token pin for login.                                                                                                                                                |
+| SIGN_SERVER_PKCS11_KERT_ID_HEX  |                                       | Optional; the id of the key pair (private and public keys) and the certificate to get from the PKCS#11.                                                                           |
+| SIGN_SERVER_PKCS11_KERT_LABEL   |                                       | Optional; the label of the key pair (private and public keys and the certificate to get from the PKCS#11.                                                                         |
 
-> *Required: one way to select a token must be provided; in other words, at least one of the `SIGN_SERVER_TOKEN_SLOT`, `SIGN_SERVER_TOKEN_SERIAL`, and `SIGN_SERVER_TOKEN_LABEL` environment variables must be set.
+> *Required: at least one way to select a token must be provided; in other words, at least one of the `SIGN_SERVER_TOKEN_SLOT`, `SIGN_SERVER_TOKEN_SERIAL`, and `SIGN_SERVER_TOKEN_LABEL` environment variables must be set.
 
 > Do not forget to load your HSM's specific configuration if there are any (the HSM behind the PKCS#11 interface implemented by the provided library); it is usually done through setting a specific environment variable, for example `SOFTHSM2_CONF=/home/user/config.file` when using SoftHSMv2 with a custom configuration.
 
