@@ -45,7 +45,7 @@ func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signI
 	}()
 
 	optimConf := pdfcpuModel.NewDefaultConfiguration()
-	optimConf.WriteXRefStream = false // TODO: remove this line after debugging the related issue.
+	optimConf.WriteXRefStream = false
 
 	err = api.Optimize(input, optimInTmpFile, optimConf)
 	if err != nil {
@@ -53,7 +53,7 @@ func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signI
 	}
 
 	readConf := pdfcpuModel.NewDefaultConfiguration()
-	readConf.WriteXRefStream = false // TODO: remove this line after debugging the related issue.
+	readConf.WriteXRefStream = false
 
 	pdfCtx, err := api.ReadContext(optimInTmpFile, readConf)
 	if err != nil {
