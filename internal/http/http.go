@@ -90,7 +90,7 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 		return // Client closed the connection.
 	}
 
-	err = pdfSigner.SignModel(inFile.Name(), outFile.Name(), signInfo)
+	err = pdfSigner.Sign(inFile.Name(), outFile.Name(), signInfo)
 	if err != nil {
 		http.Error(w, "Something went wrong on our side.", http.StatusInternalServerError)
 		slog.ErrorContext(r.Context(), "Signing a PDF file failed.", "error", err)

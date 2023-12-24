@@ -12,21 +12,25 @@ import (
 	"time"
 )
 
-type PdfSigner struct {
-	Key             crypto.Signer
-	Cert            *x509.Certificate
-	certChainsCache [][]*x509.Certificate
+type DigitorusPdfSigner struct {
+	key        crypto.Signer
+	cert       *x509.Certificate
+	certChains [][]*x509.Certificate
 }
 
-func NewPdfSigner(key crypto.Signer, cert *x509.Certificate) *PdfSigner {
-	return &PdfSigner{
-		Key:  key,
-		Cert: cert,
+func NewDigitorusPdfSigner(key crypto.Signer, cert *x509.Certificate, certChains [][]*x509.Certificate) *DigitorusPdfSigner {
+	return &DigitorusPdfSigner{
+		key:        key,
+		cert:       cert,
+		certChains: certChains,
 	}
 }
 
-// Sign function signs the input PDF file and writes it to the output (calls os.Create on the output file).
-func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignature) error {
+func (ps *DigitorusPdfSigner) Sign(input, output string, signInfo *model.SignInfo) error {
+	return ps.SignDigitorus(input, output, signInfo.ToDigitorusModel())
+}
+
+func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfsign.SignDataSignature) error {
 	signData.Info.Date = time.Now()
 
 	// Read the PDF version.
@@ -41,7 +45,7 @@ func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignat
 		return fmt.Errorf("signing not supported; %w", err)
 	}
 
-	certChains, err := ps.ensureCertChainsCache()
+	ps.tryFillCertChainsIfNil()
 	if err != nil {
 		return fmt.Errorf("failed to obtain certificate chains of trust; %w", err)
 	}
@@ -49,9 +53,9 @@ func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignat
 	err = pdfsign.SignFile(input, output, pdfsign.SignData{
 		Signature:         *signData,
 		DigestAlgorithm:   digestAlg,
-		Signer:            ps.Key,
-		Certificate:       ps.Cert,
-		CertificateChains: certChains,
+		Signer:            ps.key,
+		Certificate:       ps.cert,
+		CertificateChains: ps.certChains,
 		TSA: pdfsign.TSA{
 			URL: "https://freetsa.org/tsr",
 		},
@@ -66,23 +70,12 @@ func (ps *PdfSigner) Sign(input, output string, signData *pdfsign.SignDataSignat
 	return nil
 }
 
-func (ps *PdfSigner) SignModel(input, output string, signInfo *model.SignInfo) error {
-	return ps.Sign(input, output, signInfo.ToOldModel())
-}
-
 var TestCertRoots *x509.CertPool = nil
 
-func (ps *PdfSigner) ensureCertChainsCache() ([][]*x509.Certificate, error) {
-	chains := ps.certChainsCache
-	if chains != nil {
-		return chains, nil
+func (ps *DigitorusPdfSigner) tryFillCertChainsIfNil() {
+	if ps.certChains != nil {
+		return
 	}
 
-	chains, err := ps.Cert.Verify(x509.VerifyOptions{Roots: TestCertRoots})
-	if err != nil {
-		return nil, fmt.Errorf("verifying certificate failed; %w", err)
-	}
-
-	ps.certChainsCache = chains
-	return chains, nil
+	ps.certChains, _ = ps.cert.Verify(x509.VerifyOptions{Roots: TestCertRoots})
 }

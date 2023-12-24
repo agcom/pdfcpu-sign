@@ -5,10 +5,10 @@ import (
 	pdfsign "github.com/digitorus/pdfsign/sign"
 )
 
-func (si *SignInfo) ToOldModel() *pdfsign.SignDataSignature {
+func (si *SignInfo) ToDigitorusModel() *pdfsign.SignDataSignature {
 	return &pdfsign.SignDataSignature{
-		CertType:   si.Type.ToOldModel(),
-		DocMDPPerm: si.DocMdp.ToOldModel(),
+		CertType:   si.Type.ToDigitorusModel(),
+		DocMDPPerm: si.DocMdp.ToDigitorusModel(),
 		Info: pdfsign.SignDataSignatureInfo{
 			Name:        si.SignerInfo.Name,
 			Location:    si.SignerInfo.Location,
@@ -19,7 +19,8 @@ func (si *SignInfo) ToOldModel() *pdfsign.SignDataSignature {
 	}
 }
 
-func (st SignType) ToOldModel() uint {
+//goland:noinspection GoMixedReceiverTypes
+func (st SignType) ToDigitorusModel() uint {
 	switch st {
 	case SignTypeCertification:
 		return pdfsign.CertificationSignature
@@ -30,7 +31,8 @@ func (st SignType) ToOldModel() uint {
 	panic(fmt.Sprintf("invalid SignType enum value %d", st))
 }
 
-func (dm DocMdp) ToOldModel() uint {
+//goland:noinspection GoMixedReceiverTypes
+func (dm DocMdp) ToDigitorusModel() uint {
 	switch dm {
 	case DocMdpNoChanges:
 		return pdfsign.DoNotAllowAnyChangesPerms

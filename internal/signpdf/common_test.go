@@ -1,14 +1,12 @@
 package signpdf
 
 import (
+	"crypto"
 	"crypto/x509"
 	"encoding/base64"
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/agcom/pdfcpu-sign/internal/model"
 	"github.com/agcom/pdfcpu-sign/internal/p11"
 	"github.com/agcom/pdfcpu-sign/internal/testutil"
-	pdfsign "github.com/digitorus/pdfsign/sign"
-	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/stretchr/testify/require"
 	"log"
 	"log/slog"
 	"os"
@@ -16,14 +14,16 @@ import (
 	"time"
 )
 
-var pdfSigner *PdfSigner
+var pvKey crypto.PrivateKey
+var cert *x509.Certificate
+var certChains [][]*x509.Certificate
 
 func TestMain(m *testing.M) {
-	os.Exit(MainDeferSafe(m))
+	os.Exit(mainDeferSafe(m))
 }
 
-// MainDeferSafe would not call os.Exit and therefore gives the cleanup defer functions to behave.
-func MainDeferSafe(m *testing.M) int {
+// mainDeferSafe would not call os.Exit and therefore gives time to the cleanup defer functions to behave.
+func mainDeferSafe(m *testing.M) int {
 	err := p11.InitCrypto11Ctx()
 	if err != nil {
 		log.Panicf("Creating crypto11 context failed; %v.\n", err)
@@ -71,36 +71,41 @@ func MainDeferSafe(m *testing.M) int {
 
 	kert := kerts[0]
 
-	key := kert.PrivateKey.(crypto11.Signer) // Returned private keys from crypto11 do implement crypto11.Signer (the purpose of the library).
-	cert := kert.Leaf
+	pvKey = kert.PrivateKey
+	cert = kert.Leaf
+	certChains = [][]*x509.Certificate{{cert}}
 
 	TestCertRoots = x509.NewCertPool()
 	TestCertRoots.AddCert(cert)
-
-	pdfSigner = NewPdfSigner(key, cert)
 
 	exitCode := m.Run()
 
 	return exitCode
 }
 
-func TestPDFSigner_Sign(t *testing.T) {
-	err := pdfSigner.Sign("./sample.pdf", "./sample-signed.pdf", &pdfsign.SignDataSignature{
-		CertType:   pdfsign.CertificationSignature,
-		DocMDPPerm: pdfsign.DoNotAllowAnyChangesPerms,
-		Info: pdfsign.SignDataSignatureInfo{
+func newTestCertSignInfo() *model.SignInfo {
+	return &model.SignInfo{
+		Type:   model.SignTypeCertification,
+		DocMdp: model.DocMdpNoChanges,
+		SignerInfo: model.SignerInfo{
 			Name:        "Alireza",
 			Location:    "Earth",
-			Reason:      "Sealing",
-			ContactInfo: "example@example.com",
+			Reason:      "Test",
+			ContactInfo: "example@exmaple.com",
 			Date:        time.Now(),
 		},
-	})
+	}
+}
 
-	require.NoError(t, err)
-
-	// Validate the output PDF file
-	err = pdfcpu.ValidateFile("./sample-signed.pdf", nil)
-
-	require.NoError(t, err)
+func newTestApprovalSignInfo() *model.SignInfo {
+	return &model.SignInfo{
+		Type: model.SignTypeApproval,
+		SignerInfo: model.SignerInfo{
+			Name:        "Alireza",
+			Location:    "Earth",
+			Reason:      "Test",
+			ContactInfo: "example@exmaple.com",
+			Date:        time.Now(),
+		},
+	}
 }

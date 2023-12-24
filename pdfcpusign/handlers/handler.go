@@ -1,0 +1,16 @@
+package handlers
+
+import (
+	"github.com/agcom/pdfcpu-sign/pdfcpusign/models"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+)
+
+type SigHandler interface {
+	// TODO: facilitate signing already existing signature field, and/or providing the signature field properties.
+
+	// Sign
+	// Beware that after calling this function, you should only call api.WriteIncrement on the given context.
+	Sign(ctx *model.Context, sig *models.Sig) error
+}
+
+// TODO: facilitate honoring the signature seed value dictionary (when the user want to sign an existing signature field) that dictates how to sign a PDF document.

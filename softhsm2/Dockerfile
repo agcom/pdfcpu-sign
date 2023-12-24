@@ -1,4 +1,4 @@
-FROM alpine:3.18.4 AS builder
+FROM alpine:3.19.0 AS builder
 
 ARG SOFTHSM_V2_VERSION=2.6.1
 
@@ -16,7 +16,7 @@ RUN sh ./autogen.sh \
     && make \
     && make install
 
-FROM alpine:3.18.4
+FROM alpine:3.19.0
 
 RUN apk --no-cache add libstdc++ openssl musl opensc
 
