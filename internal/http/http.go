@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"io"
+	"log"
 	"log/slog"
 	"mime"
 	"mime/multipart"
@@ -22,6 +23,11 @@ func Run() {
 
 	r.Post("/v1/sign", postSign)
 
+	port, err := getHttpPortConf()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Panicln(err)
+	}
+
 	server := &http.Server{
 		Addr:    fmt.Sprintf("0.0.0.0:%d", port),
 		Handler: h2c.NewHandler(r, &http2.Server{}),
@@ -31,7 +37,7 @@ func Run() {
 		slog.Info("The HTTP server initialized.", "address", server.Addr)
 	}()
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("The HTTP server closed unexpectedly.", "error", err)
 	} else {
