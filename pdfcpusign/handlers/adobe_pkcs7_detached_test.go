@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"crypto"
-	"fmt"
+	"errors"
 	"github.com/agcom/pdfcpu-sign/pdfcpusign/models"
+	"github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/stretchr/testify/require"
@@ -122,25 +123,14 @@ func testSample(t *testing.T, h SigHandler, sample string, sig *models.Sig) stri
 	// TODO: check the byte range.
 
 	// TODO: use the qpdf C library instead of relying on the command line.
-	_, err = exec.LookPath("qpdf")
-	if err == nil { // qpdf command is available.
-		err := qpdfCheck(out.Name())
-		require.NoError(t, err)
+	qpdfOut, err := testutils.QpdfCheck(out.Name())
+	if errors.Is(err, exec.ErrNotFound) {
+		slog.Warn("The qpdf command is not available.")
 	} else {
-		slog.Warn("The qpdf command does not exist.")
+		require.NoError(t, err, qpdfOut)
 	}
 
 	return out.Name()
-}
-
-func qpdfCheck(pdfPath string) error {
-	cmd := exec.Command("qpdf", "--check", pdfPath)
-	outBytes, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%w; %s", err, string(outBytes))
-	}
-
-	return nil
 }
 
 func newTestCertSig() *models.Sig {
