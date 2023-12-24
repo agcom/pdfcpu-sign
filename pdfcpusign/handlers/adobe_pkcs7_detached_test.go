@@ -3,6 +3,7 @@ package handlers
 import (
 	"crypto"
 	"errors"
+	"fmt"
 	"github.com/agcom/pdfcpu-sign/pdfcpusign/models"
 	"github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
@@ -113,16 +114,13 @@ func testSample(t *testing.T, h SigHandler, sample string, sig *models.Sig) stri
 	require.NoError(t, err)
 
 	// Strict validation
-	// Skip the strict validation because of the pdfcpu being non-mature in this regard.
-	// TODO: enable the strict validation if the pdfcpu becomes mature in validating.
-
-	//outValidConf.ValidationMode = model.ValidationStrict
-	//err = api.Validate(out, outValidConf)
-	//require.NoError(t, err)
+	err = testutils.PdfCpuStrictValid(out)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("The pdfcpu strict validation failed; %v.", err))
+	}
 
 	// TODO: check the byte range.
 
-	// TODO: use the qpdf C library instead of relying on the command line.
 	qpdfOut, err := testutils.QpdfCheck(out.Name())
 	if errors.Is(err, exec.ErrNotFound) {
 		slog.Warn("The qpdf command is not available.")

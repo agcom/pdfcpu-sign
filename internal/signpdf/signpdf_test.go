@@ -2,6 +2,7 @@ package signpdf
 
 import (
 	"errors"
+	"fmt"
 	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/stretchr/testify/require"
@@ -58,7 +59,10 @@ func testSample(t *testing.T, ps PdfSigner, sample string, signInfo *SignInfo) {
 	err = pdfcpu.Validate(out, nil)
 	require.NoError(t, err)
 
-	// TODO: strict validation using pdfcpu (at the time, it was not mature enough to be used).
+	err = pdfcpusigntestutils.PdfCpuStrictValid(out)
+	if err != nil { // Only log; no require; because the strict validation is not necessary for a PDF file to be considered OK.
+		slog.Warn(fmt.Sprintf("The pdfcpu strict validation failed; %s.", err))
+	}
 
 	// Check using QPDF.
 	qpdfOut, err := pdfcpusigntestutils.QpdfCheck(out.Name())

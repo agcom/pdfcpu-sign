@@ -150,8 +150,13 @@ func Test_postSign(t *testing.T) {
 	err = pdfcpu.ValidateFile(outFile.Name(), nil)
 	require.NoError(t, err)
 
+	err = pdfcpusigntestutils.PdfCpuStrictValid(outFile)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("The pdfcpu strict validation failed; %v.", err))
+	}
+
 	if qpdfOut, err := pdfcpusigntestutils.QpdfCheck(outFile.Name()); errors.Is(err, exec.ErrNotFound) {
-		slog.Warn("The qpdf command is not available.", "error", err)
+		slog.Warn("The qpdf command is not available.")
 	} else {
 		require.NoError(t, err, qpdfOut)
 	}

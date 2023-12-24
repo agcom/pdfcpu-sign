@@ -7,6 +7,7 @@ import (
 )
 
 func QpdfCheck(pdfPath string) (string, error) {
+	// TODO: use the qpdf C library instead of relying on the command line.
 	_, err := exec.LookPath("qpdf")
 	if err != nil {
 		if !errors.Is(err, exec.ErrDot) {
