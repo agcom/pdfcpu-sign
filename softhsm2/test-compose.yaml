@@ -1,0 +1,26 @@
+# A SoftHSMv2 enabled environment to run tests in.
+# If you are using JetBrains GoLand, it supports seamless integration with Docker compose through run configurations.
+
+services:
+  softhsm:
+    build:
+      context: ./softhsm2/
+      dockerfile: ./Dockerfile
+    volumes:
+      - softhsm:/var/lib/softhsm/
+    env_file:
+      - test-compose.env
+  softhsm2go:
+    build:
+      context: ./softhsm2/
+      dockerfile: ./Dockerfile-go
+    volumes:
+      - softhsm:/var/lib/softhsm/
+    env_file:
+      - test-compose.env
+
+
+volumes:
+  # Make sure to initialize a token inside the volume by the softhsm2-util tool available inside the images/containers;
+  # after initializing a token, do not forget to set the corresponding values in the test-compose.env file.
+  softhsm: { }
