@@ -2,15 +2,16 @@ package http
 
 import (
 	"bytes"
-	"crypto/x509"
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/model"
-	"github.com/agcom/pdfcpu-sign/internal/p11"
+	"github.com/agcom/pdfcpu-sign/internal/pkcs11"
 	"github.com/agcom/pdfcpu-sign/internal/signpdf"
-	"github.com/agcom/pdfcpu-sign/internal/testutil"
+	"github.com/agcom/pdfcpu-sign/internal/testutils"
+	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
+	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/stretchr/testify/require"
 	"io"
 	"log"
@@ -20,78 +21,69 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"os"
+	"os/exec"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(MainDeferSafe(m))
+	os.Exit(mainDeferSafe(m))
 }
 
-// MainDeferSafe would not call os.Exit and therefore gives the cleanup defer functions to behave.
-func MainDeferSafe(m *testing.M) int {
-	err := p11.InitCrypto11Ctx()
+// mainDeferSafe would not call os.Exit and therefore gives the cleanup defer functions to behave.
+func mainDeferSafe(m *testing.M) int {
+	crypto11Ctx, err := pkcs11.GetCrypt11Ctx()
 	if err != nil {
 		log.Panicln(err)
 	}
 
 	defer func() {
-		err := p11.C11Ctx.Close()
+		err := crypto11Ctx.Close()
 		if err != nil {
-			slog.Error("Closing crypto11 context failed.", "error", err)
+			slog.Error("Closing the crypto11 context failed.", "error", err)
 		}
 	}()
 
-	keyId, err := testutil.AddTestKert(p11.C11Ctx)
+	kertId, err := testutils.AddTestKert(crypto11Ctx)
 	if err != nil {
-		log.Panicf("Generating a test kert (key pair + certificate) failed; %v.\n", err)
+		log.Panicf("Adding a test kert failed; %v.\n", err)
 	}
 
 	defer func() {
-		err := p11.C11Ctx.DeleteCertificate(keyId, nil, nil)
+		err := crypto11Ctx.DeleteCertificate(kertId, nil, nil)
 		if err != nil {
 			slog.Error(
-				"Deleting a test certificate failed.",
-				"keyIdBase64", base64.StdEncoding.EncodeToString(keyId),
+				"Deleting the test certificate failed.",
+				"certIdBase64", base64.StdEncoding.EncodeToString(kertId),
 			)
 		}
 
-		key, err := p11.C11Ctx.FindKeyPair(keyId, nil)
+		key, err := crypto11Ctx.FindKeyPair(kertId, nil)
 		if err != nil {
-			slog.Error("Deleting a test key pair failed.", "keyIdBase64", base64.StdEncoding.EncodeToString(keyId))
+			slog.Error(
+				"Deleting the test key pair failed.",
+				"keyIdBase64",
+				base64.StdEncoding.EncodeToString(kertId),
+			)
 		}
 
 		err = key.Delete()
 		if err != nil {
-			slog.Error("Deleting a test key pair failed.", "keyIdBase64", base64.StdEncoding.EncodeToString(keyId))
+			slog.Error(
+				"Deleting the test key pair failed.",
+				"keyIdBase64",
+				base64.StdEncoding.EncodeToString(kertId),
+			)
 		}
 	}()
 
-	kerts, err := p11.C11Ctx.FindAllPairedCertificates()
+	pvKey, _, cert, err := pkcs11.GetKert(kertId, "")
 	if err != nil {
 		log.Panicf("Finding the just now created kert failed; %v.\n", err)
 	}
 
-	if len(kerts) > 1 {
-		log.Panicf("Too many kerts (%d).\n", len(kerts))
-	}
-
-	kert := kerts[0]
-	cert := kert.Leaf
-
-	signpdf.TestCertRoots = x509.NewCertPool()
-	signpdf.TestCertRoots.AddCert(cert)
-
-	err = p11.InitKert()
-	if err != nil {
-		log.Panicln(err)
-	}
-	err = InitPdfSigner()
-	if err != nil {
-		log.Panicln(err)
-	}
+	pdfSigner = signpdf.NewPdfCpuSignPdfSigner(pvKey, cert, nil)
 
 	exitCode := m.Run()
-
 	return exitCode
 }
 
@@ -114,13 +106,13 @@ func Test_postSign(t *testing.T) {
 	partH.Set("Content-Type", "application/json; charset=UTF-8")
 	partW, err = mpw.CreatePart(partH)
 	require.NoError(t, err)
-	signInfo := model.SignInfo{
-		Type:   model.SignTypeCertification,
-		DocMdp: model.DocMdpNoChanges,
-		SignerInfo: model.SignerInfo{
+	signInfo := signpdf.SignInfo{
+		Type:   signpdf.SignTypeCert,
+		DocMdp: signpdf.DocMdpNoChanges,
+		SignerInfo: signpdf.SignerInfo{
 			Name:        "Alireza",
 			Location:    "Earth",
-			Reason:      "Sealing",
+			Reason:      "Test",
 			ContactInfo: "example@example.com",
 		},
 	}
@@ -154,4 +146,13 @@ func Test_postSign(t *testing.T) {
 
 	_, err = io.Copy(outFile, res.Body)
 	require.NoError(t, err)
+
+	err = pdfcpu.ValidateFile(outFile.Name(), nil)
+	require.NoError(t, err)
+
+	if qpdfOut, err := pdfcpusigntestutils.QpdfCheck(outFile.Name()); errors.Is(err, exec.ErrNotFound) {
+		slog.Warn("The qpdf command is not available.", "error", err)
+	} else {
+		require.NoError(t, err, qpdfOut)
+	}
 }

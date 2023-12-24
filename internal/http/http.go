@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/model"
+	"github.com/agcom/pdfcpu-sign/internal/signpdf"
 	"github.com/go-chi/chi/v5"
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"golang.org/x/net/http2"
@@ -66,7 +66,7 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a temporary file for the output signed PDF.
-	outFile, err := os.CreateTemp("", "sign-server-output-*.pdf")
+	outFile, err := os.CreateTemp("", "sign-server-output-*.pdf") // TODO: use a common temporary directory for the package.
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Creating a temporary file for an output PDF failed.", "error", err)
 		http.Error(w, "Something went wrong on our side!", http.StatusInternalServerError)
@@ -75,12 +75,12 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		err := outFile.Close()
 		if err != nil {
-			slog.Warn("Closing a temporary file assigned to an output PDF failed.", "path", outFile.Name(), "error", err)
+			slog.Warn("Closing the temporary file assigned to the output PDF failed.", "path", outFile.Name(), "error", err)
 		}
 
 		err = os.Remove(outFile.Name())
 		if err != nil {
-			slog.Error("Removing a temporary file assigned to an output PDF failed.", "path", outFile.Name(), "error", err)
+			slog.Error("Removing the temporary file assigned to the output PDF failed.", "path", outFile.Name(), "error", err)
 		}
 	}()
 
@@ -90,7 +90,7 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 		return // Client closed the connection.
 	}
 
-	err = pdfSigner.Sign(inFile.Name(), outFile.Name(), signInfo)
+	err = pdfSigner.Sign(inFile, outFile, signInfo)
 	if err != nil {
 		http.Error(w, "Something went wrong on our side.", http.StatusInternalServerError)
 		slog.ErrorContext(r.Context(), "Signing a PDF file failed.", "error", err)
@@ -98,6 +98,13 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return the output temporary file
+	_, err = outFile.Seek(0, io.SeekStart)
+	if err != nil {
+		http.Error(w, "Something went wrong on our side.", http.StatusInternalServerError)
+		slog.ErrorContext(r.Context(), "Seeking the signed PDF temporary output file failed.", "error", err)
+		return
+	}
+
 	_, err = io.Copy(w, outFile)
 	if err != nil {
 		http.Error(w, "Something went wrong on our side.", http.StatusInternalServerError)
@@ -107,7 +114,7 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 }
 
 //goland:noinspection GoErrorStringFormat
-func postSignRequestBodyExtract(r *http.Request) (*os.File, *model.SignInfo, error, int) {
+func postSignRequestBodyExtract(r *http.Request) (*os.File, *signpdf.SignInfo, error, int) {
 	// Check the content type.
 	mimeType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
@@ -123,7 +130,7 @@ func postSignRequestBodyExtract(r *http.Request) (*os.File, *model.SignInfo, err
 	}
 
 	ok := false
-	var signInfo *model.SignInfo = nil
+	var signInfo *signpdf.SignInfo = nil
 	var inFile *os.File = nil
 	defer func() {
 		if !ok && inFile != nil {
@@ -210,14 +217,14 @@ func postSignRequestBodyExtract(r *http.Request) (*os.File, *model.SignInfo, err
 }
 
 //goland:noinspection GoErrorStringFormat
-func postSignExtractJsonPart(part *multipart.Part) (*model.SignInfo, error, int) {
+func postSignExtractJsonPart(part *multipart.Part) (*signpdf.SignInfo, error, int) {
 	// TODO: honor the charset in the content-type header params.
 	jsonBytes, err := io.ReadAll(part)
 	if err != nil {
 		return nil, fmt.Errorf("Reading the JSON part's bytes failed; %w", err), http.StatusBadRequest
 	}
 
-	var signInfo model.SignInfo
+	var signInfo signpdf.SignInfo
 	err = json.Unmarshal(jsonBytes, &signInfo)
 	if err != nil {
 		return nil, fmt.Errorf("Unmarshaling the JSON part failed; %w", err), http.StatusBadRequest

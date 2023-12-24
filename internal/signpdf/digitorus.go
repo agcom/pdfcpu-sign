@@ -1,14 +1,15 @@
-// TODO: promote the package to decoupled?
 package signpdf
 
 import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/model"
 	"github.com/digitorus/pdfsign/revocation"
 	pdfsign "github.com/digitorus/pdfsign/sign"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
+	"io"
+	"log/slog"
+	"os"
 	"time"
 )
 
@@ -26,8 +27,62 @@ func NewDigitorusPdfSigner(key crypto.Signer, cert *x509.Certificate, certChains
 	}
 }
 
-func (ps *DigitorusPdfSigner) Sign(input, output string, signInfo *model.SignInfo) error {
-	return ps.SignDigitorus(input, output, signInfo.ToDigitorusModel())
+func (ps *DigitorusPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signInfo *SignInfo) error {
+	// Create a temporary output file.
+	outTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*") // TODO: use a common temporary directory for the package.
+	if err != nil {
+		return fmt.Errorf("failed to create a temporary output file; %w", err)
+	}
+	defer func() {
+		err := outTmp.Close()
+		if err != nil {
+			slog.Error("Closing a temporary output file failed.", "error", err, "path", outTmp.Name())
+		}
+		err = os.Remove(outTmp.Name())
+		if err != nil {
+			slog.Error("Removing a temporary output file failed.", "error", err, "path", outTmp.Name())
+		}
+	}()
+
+	// Flush the input into a file if it is not already.
+	if inputFile, ok := input.(*os.File); ok {
+		err := ps.SignDigitorus(inputFile.Name(), outTmp.Name(), signInfo.ToDigitorusModel())
+		if err != nil {
+			return err
+		}
+	} else {
+		inTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*") // TODO: use a common temporary directory for the pacakge.
+		if err != nil {
+			return fmt.Errorf("failed to create the input temporary file; %w", err)
+		}
+		defer func() {
+			err := outTmp.Close()
+			if err != nil {
+				slog.Error("Closing a temporary input file failed.", "error", err, "path", inTmp.Name())
+			}
+			err = os.Remove(outTmp.Name())
+			if err != nil {
+				slog.Error("Removing a temporary input file failed.", "error", err, "path", inTmp.Name())
+			}
+		}()
+
+		err = ps.SignDigitorus(inTmp.Name(), outTmp.Name(), signInfo.ToDigitorusModel())
+		if err != nil {
+			return err
+		}
+	}
+
+	// Flush the outTmp into the output.
+	_, err = outTmp.Seek(0, io.SeekStart)
+	if err != nil {
+		return fmt.Errorf("failed to seek the temporary output file; %w", err)
+	}
+	_, err = io.Copy(output, outTmp)
+	if err != nil {
+		return fmt.Errorf("failed to copy from a temporary file into the output; %w", err)
+	}
+
+	return nil
 }
 
 func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfsign.SignDataSignature) error {
@@ -36,18 +91,13 @@ func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfs
 	// Read the PDF version.
 	pdfCtx, err := pdfcpu.ReadFile(input, nil)
 	if err != nil {
-		return fmt.Errorf("reading the PDF file failed (might be an invalid PDF file); %w", err)
+		return fmt.Errorf("reading the PDF file failed; %w", err)
 	}
 	ver := pdfCtx.VersionString()
 
 	digestAlg, err := bestDigestAlgPdfVer(ver)
-	if err != nil {
+	if err != nil { // TODO: optimize the PDF input to bump the PDF version and support signing anyway.
 		return fmt.Errorf("signing not supported; %w", err)
-	}
-
-	ps.tryFillCertChainsIfNil()
-	if err != nil {
-		return fmt.Errorf("failed to obtain certificate chains of trust; %w", err)
 	}
 
 	err = pdfsign.SignFile(input, output, pdfsign.SignData{
@@ -70,12 +120,42 @@ func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfs
 	return nil
 }
 
-var TestCertRoots *x509.CertPool = nil
+func (si *SignInfo) ToDigitorusModel() *pdfsign.SignDataSignature {
+	return &pdfsign.SignDataSignature{
+		CertType:   si.Type.ToDigitorusModel(),
+		DocMDPPerm: si.DocMdp.ToDigitorusModel(),
+		Info: pdfsign.SignDataSignatureInfo{
+			Name:        si.SignerInfo.Name,
+			Location:    si.SignerInfo.Location,
+			Reason:      si.SignerInfo.Reason,
+			ContactInfo: si.SignerInfo.ContactInfo,
+			Date:        si.SignerInfo.Date,
+		},
+	}
+}
 
-func (ps *DigitorusPdfSigner) tryFillCertChainsIfNil() {
-	if ps.certChains != nil {
-		return
+func (st SignType) ToDigitorusModel() uint {
+	switch st {
+	case SignTypeCert:
+		return pdfsign.CertificationSignature
+	case SignTypeApproval:
+		return pdfsign.ApprovalSignature
 	}
 
-	ps.certChains, _ = ps.cert.Verify(x509.VerifyOptions{Roots: TestCertRoots})
+	panic(fmt.Sprintf("invalid SignType enum value %q", st))
+}
+
+func (dm DocMdp) ToDigitorusModel() uint {
+	switch dm {
+	case DocMdpNoChanges:
+		return pdfsign.DoNotAllowAnyChangesPerms
+	case DocMdpFormSign:
+		return pdfsign.AllowFillingExistingFormFieldsAndSignaturesPerms
+	case DocMdpFormSignAnnot:
+		return pdfsign.AllowFillingExistingFormFieldsAndSignaturesAndCRUDAnnotationsPerms
+	case "":
+		return 0
+	}
+
+	panic(fmt.Sprintf("invalid DocMdp enum value %q", dm))
 }

@@ -2,35 +2,33 @@ package main
 
 import (
 	"github.com/agcom/pdfcpu-sign/internal/http"
-	"github.com/agcom/pdfcpu-sign/internal/p11"
+	"github.com/agcom/pdfcpu-sign/internal/pkcs11"
 	"log"
 	"log/slog"
 )
 
 func main() {
-	err := p11.InitCrypto11Ctx()
-	if err != nil {
-		log.Panicln(err)
-	}
+	defer func() {
+		slog.Info("Main Goroutine exiting.")
+	}()
 
 	defer func() {
-		err := p11.C11Ctx.Close()
+		crypto11Ctx, err := pkcs11.GetCrypt11Ctx()
+		if err != nil {
+			slog.Warn("Getting the crypto11 context in order to close it failed.", "error", err)
+			return
+		}
+
+		err = crypto11Ctx.Close()
 		if err != nil {
 			slog.Error("Closing the crypto11 context failed.", "error", err)
 		}
 	}()
 
-	err = p11.InitKert()
-	if err != nil {
-		log.Panicln(err)
-	}
-
-	err = http.InitPdfSigner()
+	err := http.InitPdfSigner()
 	if err != nil {
 		log.Panicln(err)
 	}
 
 	http.Run()
-
-	slog.Warn("Main Goroutine exited.")
 }

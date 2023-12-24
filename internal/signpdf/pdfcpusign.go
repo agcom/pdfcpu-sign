@@ -4,10 +4,8 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/model"
 	"github.com/agcom/pdfcpu-sign/pdfcpusign/handlers"
 	"github.com/agcom/pdfcpu-sign/pdfcpusign/models"
-	"github.com/digitorus/pdfsign/sign"
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	pdfcpuModel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"io"
@@ -27,7 +25,7 @@ func NewPdfCpuSignPdfSigner(
 	return &PdfCpuSignPdfSigner{handlers.NewAdobePkcs7DetachedSigHandler(pvKey, cert, certParents, crypto.SHA512)}
 }
 
-func (ps *PdfCpuSignPdfSigner) Sign(input, output string, signInfo *model.SignInfo) error {
+func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signInfo *SignInfo) error {
 	// TODO: do the signing and writing to the output file asynchronously.
 
 	optimInTmpFile, err := os.CreateTemp("", "")
@@ -39,14 +37,19 @@ func (ps *PdfCpuSignPdfSigner) Sign(input, output string, signInfo *model.SignIn
 		if err != nil {
 			slog.Error("Failed to close a temporary file designated for optimizing a PDF file.", "error", err, "path", optimInTmpFile.Name())
 		}
+
+		err = os.Remove(optimInTmpFile.Name())
+		if err != nil {
+			slog.Error("Failed to remove the temporary file designated for optimizing a PDF file.", "error", err, "path", optimInTmpFile.Name())
+		}
 	}()
 
 	optimConf := pdfcpuModel.NewDefaultConfiguration()
 	optimConf.WriteXRefStream = false // TODO: remove this line after debugging the related issue.
 
-	err = api.OptimizeFile(input, optimInTmpFile.Name(), optimConf)
+	err = api.Optimize(input, optimInTmpFile, optimConf)
 	if err != nil {
-		return fmt.Errorf("failed to optimize a PDF file; %w", err)
+		return fmt.Errorf("failed to optimize the PDF; %w", err)
 	}
 
 	readConf := pdfcpuModel.NewDefaultConfiguration()
@@ -54,68 +57,57 @@ func (ps *PdfCpuSignPdfSigner) Sign(input, output string, signInfo *model.SignIn
 
 	pdfCtx, err := api.ReadContext(optimInTmpFile, readConf)
 	if err != nil {
-		return fmt.Errorf("failed to read a PDF file; %w", err)
+		return fmt.Errorf("failed to read the PDF optimized file; %w", err)
 	}
 
-	err = ps.h.Sign(pdfCtx, signInfoToPdfCpuSig(signInfo))
+	err = ps.h.Sign(pdfCtx, signInfoToPdfCpuSignSig(signInfo))
 	if err != nil {
-		return fmt.Errorf("failed to sign a PDF; %w", err)
+		return fmt.Errorf("failed to sign the PDF; %w", err)
 	}
 
 	// Write to the output.
 
-	out, err := os.Create(output)
-	if err != nil {
-		return fmt.Errorf("failed to create the output file of a signed PDF; %w", err)
-	}
-	defer func() {
-		err := out.Close()
-		if err != nil {
-			slog.Error("Failed to close a temporary file designated for a signed PDF output.", "error", err, "path", out.Name())
-		}
-	}()
-
 	_, err = optimInTmpFile.Seek(0, io.SeekStart)
 	if err != nil {
-		return fmt.Errorf("failed to seek a PDF file's reader; %w", err)
+		return fmt.Errorf("failed to seek the optimized PDF file's reader; %w", err)
 	}
-	_, err = io.Copy(out, optimInTmpFile)
+	_, err = io.Copy(output, optimInTmpFile)
 	if err != nil {
-		return fmt.Errorf("failed to copy a PDF file's original content to its corresponding output signed PDF file; %w", err)
+		return fmt.Errorf("failed to copy the PDF file's original content to the output; %w", err)
 	}
 
 	// Check for a final EOL.
 
 	_, err = optimInTmpFile.Seek(-1, io.SeekEnd)
 	if err != nil {
-		return fmt.Errorf("failed to seek a PDF file's reader; %w", err)
+		return fmt.Errorf("failed to seek the optimized PDF file's reader; %w", err)
 	}
 	lastBytes := [1]byte{}
 	_, err = optimInTmpFile.Read(lastBytes[:])
 	if err != nil {
-		return fmt.Errorf("failed to read the last byte of PDF file; %w", err)
+		return fmt.Errorf("failed to read the last byte of the optimized PDF file; %w", err)
 	}
 
 	switch lastBytes[0] {
 	case '\n', '\r':
 		break
 	default:
-		_, err := out.Write([]byte{'\n'})
+		_, err := output.Write([]byte{'\n'})
 		if err != nil {
-			return fmt.Errorf("failed to write an EOL marker to a PDF file; %w", err)
+			return fmt.Errorf("failed to write an EOL marker to the output; %w", err)
 		}
 	}
 
 	// Write the increment.
-	err = api.WriteIncrement(pdfCtx, out)
+	err = api.WriteIncrement(pdfCtx, output)
 	if err != nil {
-		return fmt.Errorf("failed to write an incremental update of a PDF file; %w", err)
+		return fmt.Errorf("failed to write the incremental update to the output; %w", err)
 	}
 
 	return nil
 }
 
-func signInfoToPdfCpuSig(signInfo *model.SignInfo) *models.Sig {
+func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
 	sig := models.Sig{}
 
 	sig.Name = signInfo.SignerInfo.Name
@@ -124,7 +116,7 @@ func signInfoToPdfCpuSig(signInfo *model.SignInfo) *models.Sig {
 	sig.Location = signInfo.SignerInfo.Location
 	sig.Time = &signInfo.SignerInfo.Date
 
-	if signInfo.Type == sign.CertificationSignature {
+	if signInfo.Type == SignTypeCert {
 		sig.References = []*models.SigRef{{
 			TransformMethod: models.TransformMethodDocMdp,
 			TransformParams: &models.TransformParamsDocMdp{
@@ -136,13 +128,13 @@ func signInfoToPdfCpuSig(signInfo *model.SignInfo) *models.Sig {
 	return &sig
 }
 
-func docMdpToPdfCpuSignDocMdp(docMdp model.DocMdp) models.DocMdpPerm {
+func docMdpToPdfCpuSignDocMdp(docMdp DocMdp) models.DocMdpPerm {
 	switch docMdp {
-	case model.DocMdpNoChanges:
+	case DocMdpNoChanges:
 		return models.DocMdpPermNoChanges
-	case model.DocMdpFormSign:
+	case DocMdpFormSign:
 		return models.DocMdpPermFormFillInAndPageTemplateInstAndSign
-	case model.DocMdpAnnotFormSign:
+	case DocMdpFormSignAnnot:
 		return models.DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot
 	}
 
