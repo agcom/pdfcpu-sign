@@ -5,8 +5,6 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
-const FieldTypeSignature string = "Sig"
-
 type FieldFlags uint32
 
 const (

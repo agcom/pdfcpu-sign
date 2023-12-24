@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-type SignatureType string
+type SigType string
 
 const (
-	SignatureTypeSig          = "Sig"
-	SignatureTypeDocTimeStamp = "DocTimeStamp"
+	SigTypeSig          SigType = "Sig"
+	SigTypeDocTimeStamp SigType = "DocTimeStamp"
 )
 
 const (
@@ -31,17 +31,17 @@ const (
 	FilterVeriSignPpkvs = "VeriSign.PPKVS"
 )
 
-type SignatureChanges struct {
+type SigChanges struct {
 	PagesAltered   int
 	FieldsAltered  int
 	FieldsFilledIn int
 }
 
-func (sc *SignatureChanges) ToPdfArr() types.Array {
+func (sc *SigChanges) ToPdfArr() types.Array {
 	return types.NewIntegerArray(sc.PagesAltered, sc.FieldsAltered, sc.FieldsFilledIn)
 }
 
-func (sc *SignatureChanges) ToPdfObj() types.Object {
+func (sc *SigChanges) ToPdfObj() types.Object {
 	return sc.ToPdfArr()
 }
 
@@ -82,7 +82,7 @@ func (sr *SigRef) ToPdfObj() types.Object {
 }
 
 type Sig struct {
-	Type      SignatureType
+	Type      SigType
 	Filter    string
 	SubFilter string
 
@@ -107,7 +107,7 @@ type Sig struct {
 	PropAuthTime   *int
 	PropAuthType   PropAuthType
 
-	Changes       *SignatureChanges
+	Changes       *SigChanges
 	ContactInfo   string
 	FormatVersion int // V
 }

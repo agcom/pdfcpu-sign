@@ -15,7 +15,7 @@ import (
 	"io"
 )
 
-type adobePkcs7DetachedSignatureHandler struct {
+type adobePkcs7DetachedSigHandler struct {
 	pvKey crypto.PrivateKey
 	cert  *x509.Certificate
 
@@ -35,13 +35,13 @@ type adobePkcs7DetachedSignatureHandler struct {
 	// TODO: timestamp & revocation information
 }
 
-func NewAdobePkcs7DetachedSignatureHandler(
+func NewAdobePkcs7DetachedSigHandler(
 	pvKey crypto.PrivateKey,
 	cert *x509.Certificate,
 	certParents []*x509.Certificate,
 	digestAlg crypto.Hash,
 ) SigHandler {
-	return &adobePkcs7DetachedSignatureHandler{
+	return &adobePkcs7DetachedSigHandler{
 		pvKey:        pvKey,
 		cert:         cert,
 		certParents:  certParents,
@@ -50,7 +50,7 @@ func NewAdobePkcs7DetachedSignatureHandler(
 	}
 }
 
-func (h *adobePkcs7DetachedSignatureHandler) Sign(ctx *model.Context, sig *models.Sig) error {
+func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *models.Sig) error {
 	var err error
 
 	// Preserve the original PDF bytes before altering the non-increment-aware context.
@@ -298,8 +298,8 @@ func writeAll(ctx *model.Context) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (h *adobePkcs7DetachedSignatureHandler) initSig(sig *models.Sig) error {
-	sig.Type = models.SignatureTypeSig
+func (h *adobePkcs7DetachedSigHandler) initSig(sig *models.Sig) error {
+	sig.Type = models.SigTypeSig
 	sig.Filter = models.FilterAdobePpkLite
 	sig.SubFilter = models.SubFilterAdobePkcs7Detached
 
@@ -310,7 +310,7 @@ func (h *adobePkcs7DetachedSignatureHandler) initSig(sig *models.Sig) error {
 
 	// TODO: does the added signature field should be counted in this (currently the following code does so)?
 	if sig.Changes == nil {
-		sig.Changes = &models.SignatureChanges{}
+		sig.Changes = &models.SigChanges{}
 	}
 	sig.Changes.FieldsAltered++
 	sig.Changes.FieldsFilledIn++
@@ -330,7 +330,7 @@ func (h *adobePkcs7DetachedSignatureHandler) initSig(sig *models.Sig) error {
 // initSigField initializes the given brand-new signature field.
 // The function is not ready for initializing an already existing signature field.
 // It mutates the given context by inserting the given signature dictionary and a signature field lock dictionary if it is a certification signature.
-func (h *adobePkcs7DetachedSignatureHandler) initSigField(ctx *model.Context, sig *models.Sig, sigField *models.SigField) (error, types.Dict) {
+func (h *adobePkcs7DetachedSigHandler) initSigField(ctx *model.Context, sig *models.Sig, sigField *models.SigField) (error, types.Dict) {
 	nameTrail, err := rndSigFieldNameTrail()
 	if err != nil {
 		return fmt.Errorf("failed to generate a random trailing string for a signature field partial name; %w", err), nil
@@ -374,7 +374,7 @@ func (h *adobePkcs7DetachedSignatureHandler) initSigField(ctx *model.Context, si
 	return nil, sigDict
 }
 
-func (h *adobePkcs7DetachedSignatureHandler) marshalSig(data []byte) ([]byte, error) {
+func (h *adobePkcs7DetachedSigHandler) marshalSig(data []byte) ([]byte, error) {
 	pkcs7Sig, err := pkcs7.NewSignedData(data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a PKCS#7 signature container; %w", err)
@@ -397,7 +397,7 @@ func (h *adobePkcs7DetachedSignatureHandler) marshalSig(data []byte) ([]byte, er
 }
 
 // allocContents determines the size of the contents entry by signing a dummy data.
-func (h *adobePkcs7DetachedSignatureHandler) allocContents(sig *models.Sig) error {
+func (h *adobePkcs7DetachedSigHandler) allocContents(sig *models.Sig) error {
 	dummyMarshaledSig, err := h.marshalSig([]byte("Dummy data..."))
 	if err != nil {
 		return fmt.Errorf("failed to determine the size of the contents entry in a signature by signing a dummy data; %w", err)

@@ -24,7 +24,7 @@ func NewPdfCpuSignPdfSigner(
 	cert *x509.Certificate,
 	certParents []*x509.Certificate,
 ) *PdfCpuSignPdfSigner {
-	return &PdfCpuSignPdfSigner{handlers.NewAdobePkcs7DetachedSignatureHandler(pvKey, cert, certParents, crypto.SHA512)}
+	return &PdfCpuSignPdfSigner{handlers.NewAdobePkcs7DetachedSigHandler(pvKey, cert, certParents, crypto.SHA512)}
 }
 
 func (ps *PdfCpuSignPdfSigner) Sign(input, output string, signInfo *model.SignInfo) error {

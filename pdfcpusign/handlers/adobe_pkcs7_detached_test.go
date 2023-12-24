@@ -17,8 +17,8 @@ import (
 	"time"
 )
 
-func Test_adobePkcs7DetachedSignatureHandler_Sign(t *testing.T) {
-	h := NewAdobePkcs7DetachedSignatureHandler(pvKey, cert, nil, crypto.SHA256)
+func Test_adobePkcs7DetachedSigHandler_Sign(t *testing.T) {
+	h := NewAdobePkcs7DetachedSigHandler(pvKey, cert, nil, crypto.SHA256)
 
 	t.Run("certification", func(t *testing.T) {
 		testSamples(t, h, newTestCertSig())
