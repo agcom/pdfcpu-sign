@@ -29,7 +29,7 @@ func NewDigitorusPdfSigner(key crypto.Signer, cert *x509.Certificate, certChains
 
 func (ps *DigitorusPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signInfo *SignInfo) error {
 	// Create a temporary output file.
-	outTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*") // TODO: use a common temporary directory for the package.
+	outTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*")
 	if err != nil {
 		return fmt.Errorf("failed to create a temporary output file; %w", err)
 	}
@@ -51,7 +51,7 @@ func (ps *DigitorusPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signIn
 			return err
 		}
 	} else {
-		inTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*") // TODO: use a common temporary directory for the pacakge.
+		inTmp, err := os.CreateTemp("", "agcom-pdfcpu-sign-digitorus-pdf-signer-*")
 		if err != nil {
 			return fmt.Errorf("failed to create the input temporary file; %w", err)
 		}

@@ -72,7 +72,7 @@ func postSign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a temporary file for the output signed PDF.
-	outFile, err := os.CreateTemp("", "sign-server-output-*.pdf") // TODO: use a common temporary directory for the package.
+	outFile, err := os.CreateTemp("", "sign-server-output-*.pdf")
 	if err != nil {
 		slog.ErrorContext(r.Context(), "Creating a temporary file for an output PDF failed.", "error", err)
 		http.Error(w, "Something went wrong on our side!", http.StatusInternalServerError)
