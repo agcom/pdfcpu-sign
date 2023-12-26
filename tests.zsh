@@ -6,10 +6,14 @@ compose() {
 	docker compose -f ./softhsm2/test-compose.yaml "$@"
 }
 
+init_slot() {
+	compose run softhsm2go softhsm2-util --show-slots | grep -Po '^Slot \K\d+$' | tail -n 1
+}
+
 init_token() {
 	label="$1"
 
-	compose run softhsm2go softhsm2-util --init-token --slot 0 --label "$label" --pin "$TOKEN_PIN" --so-pin "$TOKEN_PIN" | \
+	compose run softhsm2go softhsm2-util --init-token --slot "$(init_slot)" --label "$label" --pin "$TOKEN_PIN" --so-pin "$TOKEN_PIN" | \
 		awk '{print $NF}'
 }
 
