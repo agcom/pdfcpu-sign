@@ -23,6 +23,8 @@ RUN apk --no-cache add libstdc++ openssl musl opensc build-base
 # gcc is installed through the build-base package.
 ENV CGO_ENABLED=1
 
+RUN apk --no-cache add libjpeg qpdf # Install the QPDF command which is used in the tests.
+
 COPY --from=builder /usr/local/lib/softhsm/ /usr/local/lib/softhsm/
 COPY --from=builder /usr/local/bin/softhsm* /usr/local/bin/
 COPY --from=builder /etc/softhsm* /etc/
