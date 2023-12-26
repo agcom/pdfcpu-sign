@@ -40,4 +40,5 @@ compose run \
 	-e SIGN_SERVER_PKCS11_TOKEN_SLOT="$token_slot" -e SIGN_SERVER_PKCS11_TOKEN_PIN="$TOKEN_PIN" \
 	-w /src/ \
 	softhsm2go \
-	go test ./...
+	go test ./... -v \
+	-gcflags '-N -l' # Disable optimizations; due to encountering a go compiler bug!
