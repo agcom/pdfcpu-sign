@@ -1,1 +1,0 @@
-./softhsm2-go-test.zsh

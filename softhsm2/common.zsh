@@ -18,8 +18,8 @@ init_token() {
 	pin="${2-1234}"
 
 	docker_compose run --rm softhsm2 \
-		softhsm2-util --init-token --slot "$(find_empty_slot)" --label "$label" --pin "$pin" --so-pin "$pin" \
-			| awk '{print $NF}'
+		softhsm2-util --init-token --slot "$(find_empty_slot)" --label "$label" --pin "$pin" --so-pin "$pin" |
+		awk '{print $NF}'
 }
 
 rm_token() {
@@ -47,8 +47,7 @@ import_kert() {
 	kert_pass="${4-1234}"
 	kert_id="${5-$(rnd_num 4)}"
 
-	docker_compose run --rm softhsm2 \
-		-v "$kert:/tmp/golang-signserver-tests/kert.p12" \
+	docker_compose run --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" softhsm2 \
 		sh -c "source ./softhsm2/common.zsh && _import_kert '$token_slot' '$token_pin' '/tmp/golang-signserver-tests/kert.p12' '$kert_pass' '$kert_id'"
 }
 
@@ -62,12 +61,12 @@ _import_kert() {
 
 	tmp_dir="$(mktemp -d /tmp/golang-signserver-tests-XXXXXXX)"
 	cert_der_tmp="$(mktemp -p "$tmp_dir" cert.der-XXXXXXX)"
-    key_der_tmp="$(mktemp -p "$tmp_dir" key.der-XXXXXXX)"
+	key_der_tmp="$(mktemp -p "$tmp_dir" key.der-XXXXXXX)"
 
-    openssl pkcs12 -in "$kert" -password "pass:$kert_pass" -out "$cert_der_tmp" -clcerts -nokeys 1>&2
-    openssl pkcs12 -in "$kert" -password "pass:$kert_pass" -out "$key_der_tmp" -nocerts -noenc 1>&2
+	openssl pkcs12 -in "$kert" -password "pass:$kert_pass" -out "$cert_der_tmp" -clcerts -nokeys 1>&2
+	openssl pkcs12 -in "$kert" -password "pass:$kert_pass" -out "$key_der_tmp" -nocerts -noenc 1>&2
 
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so \
+	pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so \
 		--write-object "$key_der_tmp" --type privkey \
 		--slot "$token_slot" -l --pin "$token_pin" --id "$kert_id" 1>&2
 
