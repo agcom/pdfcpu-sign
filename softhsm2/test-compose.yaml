@@ -1,4 +1,5 @@
 # A SoftHSMv2 enabled environment to run tests in.
+# The services are not intended to be run via `docker compose up`, but `docker compose run` (this file merely defined some defaults).
 # If you are using JetBrains GoLand, it supports seamless integration with Docker compose through run configurations.
 
 name: golang-signserver-tests
@@ -8,33 +9,28 @@ services:
     build:
       dockerfile: ./Dockerfile-go
     working_dir: /src/
-    command: go test ./...
+    command: sleep infinity
     volumes:
-      - ./../:/src/
+      - ./../:/src/ # TODO: make it read only mount (currently blocked by a test writing to a local file).
       - softhsm:/var/lib/softhsm/
-      - go-pkg:/go/pkg/
-      - go-build:/root/.cache/go-build/
-    env_file:
-      - test-compose.env
+      - go-pkg-cache:/go/pkg/
+      - go-build-cache:/root/.cache/go-build/
   softhsm2:
     build:
       dockerfile: ./Dockerfile
     working_dir: /src/
-    command: go run .
+    command: sleep infinity
     volumes:
-      - ./../:/src/:ro # Read only mount.
+      - ./../:/src/:ro
       - softhsm:/var/lib/softhsm/
-    env_file:
-      - test-compose.env
-
 
 volumes:
   # Make sure to initialize a token inside the volume by the softhsm2-util tool available inside the images/containers;
-  # after initializing a token, do not forget to set the corresponding values in the test-compose.env file.
+  # after initializing a token, do not forget to set the required environment variables described in the root readme.
   softhsm: { }
 
   # Go packages cache; you can also mount your $GOPATH/pkg/ instead of a volume.
-  go-pkg: { }
+  go-pkg-cache: { }
 
   # Go build cache.
-  go-build: { }
+  go-build-cache: { }

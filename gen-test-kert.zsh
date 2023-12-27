@@ -4,8 +4,8 @@
 
 set -e
 
-p12_out="${1-./test-kert.p12}"
-p12_pass="${2-1234}"
+kert_out="${1-./test-kert.p12}"
+kert_pass="${2-1234}"
 
 cleanup() {
 	rm -f "$key_tmp" || true
@@ -16,9 +16,8 @@ cleanup() {
 trap 'cleanup' EXIT
 
 tmp_dir=$(mktemp -d /tmp/golang-signserver-tests-XXXXXXX)
-
-key_tmp=$(mktemp -p "$tmp_dir" key-XXXXXXX.pem)
-cert_tmp=$(mktemp -p "$tmp_dir" cert-XXXXXXX.pem)
+key_tmp=$(mktemp -p "$tmp_dir" key.pem.XXXXXXX)
+cert_tmp=$(mktemp -p "$tmp_dir" cert.pem.XXXXXXX)
 
 openssl req -newkey rsa:2048 -nodes -keyout "$key_tmp" -x509 -days 365 -out "$cert_tmp" -batch
-openssl pkcs12 -inkey "$key_tmp" -in "$cert_tmp" -export -out "$p12_out" -password "pass:$p12_pass"
+openssl pkcs12 -export -inkey "$key_tmp" -in "$cert_tmp" -out "$kert_out" -password "pass:$kert_pass"
