@@ -12,7 +12,7 @@ trap 'rm_token "$token_label"' EXIT
 
 docker_compose run \
 	-e SIGN_SERVER_PKCS11_TOKEN_SLOT="$token_slot" -e SIGN_SERVER_PKCS11_TOKEN_PIN="$TOKEN_PIN" \
-	-w /src/ \
+	-w /src/ --rm \
 	softhsm2go \
 	go test ./... -v \
 	-gcflags '-N -l' # Disable optimizations; due to encountering a go compiler bug!
