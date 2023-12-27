@@ -101,9 +101,13 @@ func GetKert(kertId []byte, kertLabel string) (pvKey crypto.PrivateKey, pubKey c
 		return
 	}
 
-	key, err := crypto11Ctx.FindKeyPair(kertId, []byte(kertLabel))
+	pvKey, err = crypto11Ctx.FindKeyPair(kertId, []byte(kertLabel))
 	if err != nil {
 		err = fmt.Errorf("finding the key pair failed; %w", err)
+		return
+	}
+	if pvKey == nil {
+		err = fmt.Errorf("no such key pair found")
 		return
 	}
 
@@ -112,9 +116,14 @@ func GetKert(kertId []byte, kertLabel string) (pvKey crypto.PrivateKey, pubKey c
 		err = fmt.Errorf("finding the certificate failed; %w", err)
 		return
 	}
+	if cert == nil {
+		err = fmt.Errorf("no such certificate found")
+		return
+	}
 
-	pvKey = key
-	pubKey = key.Public()
+	pubKey = pvKey.(interface {
+		Public() crypto.PublicKey
+	}).Public()
 	if pubKey == nil {
 		pubKey = cert.PublicKey
 	}
