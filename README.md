@@ -27,17 +27,18 @@ There is only one HTTP API endpoint.
 
 ### POST /v1/sign
 
-Receives a digital signature information JSON object beside a PDF document, both bundled in a `multipart/mixed` request; returns the signed PDF document.
+Receives a signature information JSON object beside a PDF document, both bundled in a `multipart/form-data` request (`sign-info` and `pdf-file` fields); returns the signed PDF document.
 
 Example request:
 
 ```text
 POST /v1/sign HTTP/2
-Content-Type: multipart/mixed; boundary=------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Type: multipart/form-data; boundary=------------------------2lllWzF6kb9cgoKNL2ZEJY
 Content-Length: ...
 Accept: application/pdf
 
 --------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Disposition: form-data; name=sign-info
 Content-Type: application/json
 
 {
@@ -52,6 +53,7 @@ Content-Type: application/json
 }
 
 --------------------------2lllWzF6kb9cgoKNL2ZEJY
+Content-Disposition: form-data; name=pdf-file; filename=sample.pdf
 Content-Type: application/pdf
 
 %PDF-1.7...
