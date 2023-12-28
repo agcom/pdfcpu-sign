@@ -126,126 +126,137 @@ func postSignRequestBodyExtract(r *http.Request) (*os.File, *signpdf.SignInfo, e
 	if err != nil {
 		return nil, nil, fmt.Errorf("Bad content-type header."), http.StatusBadRequest
 	}
-	if mimeType != "multipart/mixed" {
-		return nil, nil, fmt.Errorf("Content type must be multipart/mixed, but was %s.", mimeType), http.StatusBadRequest
+	if mimeType != "multipart/form-data" {
+		return nil, nil, fmt.Errorf("Content type must be multipart/form-data, but was %s.", mimeType), http.StatusBadRequest
 	}
 
 	mpr, err := r.MultipartReader()
 	if err != nil {
-		return nil, nil, fmt.Errorf("Bad multipart request."), http.StatusBadRequest
+		return nil, nil, fmt.Errorf("Bad multipart request; %w.", err), http.StatusBadRequest
 	}
 
 	ok := false
 	var signInfo *signpdf.SignInfo = nil
-	var inFile *os.File = nil
+	var pdfFile *os.File = nil
 	defer func() {
-		if !ok && inFile != nil {
-			rmTmpFile(inFile)
+		if !ok && pdfFile != nil {
+			rmTmpFile(pdfFile)
 		}
 	}()
 
-	var status int
-
-	part, err := mpr.NextPart()
-	if err != nil {
-		return nil, nil, fmt.Errorf("Bad multipart request; failed to read the first part."), http.StatusBadRequest
-	}
-
-	partMimeType, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
-	switch partMimeType {
-	case "application/json":
-		signInfo, err, status = postSignExtractJsonPart(part)
+	for {
+		part, err := mpr.NextPart()
 		if err != nil {
-			return nil, nil, err, status
+			if errors.Is(err, io.EOF) {
+				break
+			} else {
+				return nil, nil, fmt.Errorf("Bad multipart request; %w.", err), http.StatusBadRequest
+			}
 		}
-	case "application/pdf":
-		inFile, err, status = postSignExtractPdfPart(part)
-		if err != nil {
-			return nil, nil, err, status
-		}
-	default:
-		return nil, nil, fmt.Errorf(
-			`Unexpected content-type "%s" for the first part; expected either "application/json" or "application/pdf".`,
-			partMimeType,
-		), http.StatusBadRequest
-	}
 
-	part, err = mpr.NextPart()
-	if err != nil {
-		return nil, nil, fmt.Errorf("Bad multipart request; failed to read the second part."), http.StatusBadRequest
-	}
+		contentDispos, contentDisposParams, err := mime.ParseMediaType(part.Header.Get("Content-Disposition"))
+		if err != nil {
+			return nil, nil, fmt.Errorf("Bad content-disposition header of a part; %w.", err), http.StatusBadRequest
+		}
+		if contentDispos != "form-data" {
+			return nil, nil, fmt.Errorf("Invalid content-disposition header of a part; not form-data."), http.StatusBadRequest
+		}
 
-	partMimeType, _, err = mime.ParseMediaType(part.Header.Get("Content-Type"))
-	switch partMimeType {
-	case "application/json":
-		if signInfo != nil {
-			return nil, nil,
-				fmt.Errorf("Unexpected JSON second part; the first part was already JSON; expected PDF."),
-				http.StatusBadRequest
+		name := contentDisposParams["name"]
+		if name == "" {
+			return nil, nil, fmt.Errorf("No name provided for a form field."), http.StatusBadRequest
 		}
-		signInfo, err, status = postSignExtractJsonPart(part)
-		if err != nil {
-			return nil, nil, err, status
-		}
-	case "application/pdf":
-		if inFile != nil {
-			return nil, nil,
-				fmt.Errorf("Unexpected PDF second part; the first part was already PDF; expected JSON."),
-				http.StatusBadRequest
-		}
-		inFile, err, status = postSignExtractPdfPart(part)
-		if err != nil {
-			return nil, nil, err, status
-		}
-	default:
-		if signInfo == nil {
-			return nil, nil,
-				fmt.Errorf(
-					`Unexpected content-type "%s" for the second part; expected "application/json".`,
-					partMimeType,
-				), http.StatusBadRequest
-		} else {
-			return nil, nil,
-				fmt.Errorf(
-					`Unexpected content-type "%s" for the second part; expected "application/pdf".`,
-					partMimeType,
-				), http.StatusBadRequest
+
+		switch name {
+		case "sign-info":
+			if signInfo != nil {
+				return nil, nil, fmt.Errorf("Unexpected multiple values for the sign-info form field."), http.StatusBadRequest
+			}
+
+			var status int
+			signInfo, err, status = postSignExtractSignInfo(part)
+			if err != nil {
+				return nil, nil, fmt.Errorf("Something wrong with a sign-info field; %w.", err), status
+			}
+
+			break
+		case "pdf-file":
+			if pdfFile != nil {
+				return nil, nil, fmt.Errorf("Unexpected multiple values for the pdf-file form field."), http.StatusBadRequest
+			}
+
+			fileName := contentDisposParams["filename"]
+			if fileName == "" {
+				return nil, nil, fmt.Errorf("Expected a file in the pdf-file form field (set the content-disposition header param filename)."), http.StatusBadRequest
+			}
+
+			var status int
+			pdfFile, err, status = postSignExtractPdfFile(part, fileName)
+			if err != nil {
+				return nil, nil, fmt.Errorf("Something wront with a pdf-file form field; %w.", err), status
+			}
+			break
+		default:
+			return nil, nil, fmt.Errorf("Unexpected form field %s.", name), http.StatusBadRequest
 		}
 	}
 
-	if _, err = mpr.NextPart(); !errors.Is(err, io.EOF) {
-		return nil, nil, fmt.Errorf("Bad multipart request; too many parts, expected 2 only."), http.StatusBadRequest
+	if signInfo == nil {
+		return nil, nil, fmt.Errorf("Expected a sign-info form field, but got none."), http.StatusBadRequest
+	}
+
+	if pdfFile == nil {
+		return nil, nil, fmt.Errorf("Expected a pdf-file form field, but got none."), http.StatusBadRequest
 	}
 
 	ok = true
 
-	return inFile, signInfo, nil, 0
+	return pdfFile, signInfo, nil, 0
 }
 
 //goland:noinspection GoErrorStringFormat
-func postSignExtractJsonPart(part *multipart.Part) (*signpdf.SignInfo, error, int) {
+func postSignExtractSignInfo(part *multipart.Part) (*signpdf.SignInfo, error, int) {
+	partMimeType, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, fmt.Errorf("bad content-type header; %w", err), http.StatusBadRequest
+	}
+
+	if partMimeType != "application/json" {
+		return nil, fmt.Errorf("expected application/json as the content-type, but got %q", partMimeType), http.StatusBadRequest
+	}
+
 	// TODO (minor improvement): honor the charset in the content-type header params.
 	jsonBytes, err := io.ReadAll(part)
 	if err != nil {
-		return nil, fmt.Errorf("Reading the JSON part's bytes failed; %w", err), http.StatusBadRequest
+		return nil, fmt.Errorf("reading the JSON part's bytes failed; %w", err), http.StatusBadRequest
 	}
 
 	var signInfo signpdf.SignInfo
 	err = json.Unmarshal(jsonBytes, &signInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Unmarshaling the JSON part failed; %w", err), http.StatusBadRequest
+		return nil, fmt.Errorf("unmarshaling the JSON part failed; %w", err), http.StatusBadRequest
 	}
 
 	return &signInfo, nil, 0
 }
 
 //goland:noinspection GoErrorStringFormat
-func postSignExtractPdfPart(part *multipart.Part) (*os.File, error, int) {
+func postSignExtractPdfFile(part *multipart.Part, filename string) (*os.File, error, int) {
+	mimetype, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
+	if err != nil {
+		return nil, fmt.Errorf("bad content-type header; %w", err), http.StatusBadRequest
+	}
+
+	if mimetype != "application/pdf" {
+		return nil, fmt.Errorf("expected application/pdf as the content-type, but got %q", mimetype), http.StatusBadRequest
+	}
+
 	// Flush the body (supposedly of type PDF) into a temporary file.
+	// TODO: use a common temporary directory for the application.
 	inFile, err := os.CreateTemp("", "sign-server-input-*.pdf")
 	if err != nil {
 		slog.Error("Creating a temporary file for an input PDF failed.", "error", err)
-		return nil, fmt.Errorf("Something went wrong on our side!"), http.StatusInternalServerError
+		return nil, fmt.Errorf("something went wrong on our side"), http.StatusInternalServerError
 	}
 
 	ok := false
@@ -261,7 +272,7 @@ func postSignExtractPdfPart(part *multipart.Part) (*os.File, error, int) {
 		slog.Error("Writing to a temporary file or reading a request's body failed.", "inFilePath", inFile.Name(), "error", err, "bytesWritten", n)
 
 		// Maybe the connection was closed by the client (in which case it may or may not receive this error message); thus the word "probably".
-		return nil, fmt.Errorf("Something went wrong probably on our side."), http.StatusInternalServerError
+		return nil, fmt.Errorf("something went wrong probably on our side"), http.StatusInternalServerError
 	}
 
 	ok = true

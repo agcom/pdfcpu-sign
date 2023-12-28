@@ -16,6 +16,7 @@ import (
 	"io"
 	"log"
 	"log/slog"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -97,15 +98,21 @@ func Test_postSign(t *testing.T) {
 
 	partH := textproto.MIMEHeader{}
 	partH.Set("Content-Type", "application/pdf")
+	partH.Set("Content-Disposition", mime.FormatMediaType("form-data", map[string]string{"name": "pdf-file", "filename": "sample.pdf"}))
+
 	partW, err := mpw.CreatePart(partH)
 	require.NoError(t, err)
+
 	_, err = partW.Write(samplePdfBytes)
 	require.NoError(t, err)
 
 	partH = textproto.MIMEHeader{}
 	partH.Set("Content-Type", "application/json; charset=UTF-8")
+	partH.Set("Content-Disposition", mime.FormatMediaType("form-data", map[string]string{"name": "sign-info"}))
+
 	partW, err = mpw.CreatePart(partH)
 	require.NoError(t, err)
+
 	signInfo := signpdf.SignInfo{
 		Type:   signpdf.SignTypeCert,
 		DocMdp: signpdf.DocMdpNoChanges,
@@ -118,6 +125,7 @@ func Test_postSign(t *testing.T) {
 	}
 	signInfoJsonBytes, err := json.Marshal(signInfo)
 	require.NoError(t, err)
+
 	_, err = partW.Write(signInfoJsonBytes)
 	require.NoError(t, err)
 
@@ -125,7 +133,7 @@ func Test_postSign(t *testing.T) {
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/sign", body)
-	req.Header.Set("Content-Type", fmt.Sprintf("multipart/mixed; boundary=%s", mpw.Boundary()))
+	req.Header.Set("Content-Type", fmt.Sprintf("multipart/form-data; boundary=%s", mpw.Boundary()))
 	req.Header.Set("Content-Length", fmt.Sprintf("%d", body.Len()))
 
 	w := httptest.NewRecorder()
