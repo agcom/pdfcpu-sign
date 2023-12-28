@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -121,6 +122,7 @@ func Test_postSign(t *testing.T) {
 			Location:    "Earth",
 			Reason:      "Test",
 			ContactInfo: "example@example.com",
+			Time: time.Now(),
 		},
 	}
 	signInfoJsonBytes, err := json.Marshal(signInfo)

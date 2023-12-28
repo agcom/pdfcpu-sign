@@ -39,7 +39,7 @@ The signature information model:
 		"location": "Earth", // Optional
 		"reason": "Test", // Optional
 		"contactInfo": "example@example.com", // Optional
-		"time": "2020-10-21T05:00:57.258Z" // Required; ISO-8601 representation of a date-time.
+		"time": "2023-12-28T21:30:00.000Z" // Optional; ISO-8601 representation of a date-time.
 	}
 }
 ```

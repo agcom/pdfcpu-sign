@@ -98,8 +98,8 @@ type Sig struct {
 
 	// Signature properties
 
-	HandlerVersion *int       // R; Deprecated in PDF 2.0.
-	Time           *time.Time // M
+	HandlerVersion *int      // R; Deprecated in PDF 2.0.
+	Time           time.Time // M
 	Name           string
 	Reason         string
 	Location       string
@@ -154,8 +154,8 @@ func (s *Sig) ToPdfDict() types.Dict {
 		dict["Name"] = types.StringLiteral(s.Name)
 	}
 
-	if s.Time != nil {
-		dict.Update("M", types.StringLiteral(types.DateString(*s.Time)))
+	if !s.Time.IsZero() {
+		dict.Update("M", types.StringLiteral(types.DateString(s.Time)))
 	}
 
 	if s.Location != "" {

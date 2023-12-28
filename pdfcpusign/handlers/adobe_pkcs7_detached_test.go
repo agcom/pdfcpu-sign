@@ -132,7 +132,6 @@ func testSample(t *testing.T, h SigHandler, sample string, sig *models.Sig) stri
 }
 
 func newTestCertSig() *models.Sig {
-	now := time.Now()
 	sig := models.Sig{
 		References: []*models.SigRef{{
 			TransformMethod: models.TransformMethodDocMdp,
@@ -140,7 +139,7 @@ func newTestCertSig() *models.Sig {
 				Perm: models.DocMdpPermNoChanges,
 			},
 		}},
-		Time:        &now,
+		Time:        time.Now(),
 		Name:        "Alireza",
 		Reason:      "Test",
 		Location:    "Earth",
@@ -151,9 +150,8 @@ func newTestCertSig() *models.Sig {
 }
 
 func newTestApprovalSig() *models.Sig {
-	now := time.Now()
 	sig := models.Sig{
-		Time:        &now,
+		Time:        time.Now(),
 		Name:        "Alireza",
 		Reason:      "Test",
 		Location:    "Earth",

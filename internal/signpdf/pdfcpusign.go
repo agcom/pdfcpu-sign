@@ -115,7 +115,7 @@ func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
 		sig.Reason = signInfo.SignerInfo.Reason
 		sig.ContactInfo = signInfo.SignerInfo.ContactInfo
 		sig.Location = signInfo.SignerInfo.Location
-		sig.Time = &signInfo.SignerInfo.Time
+		sig.Time = signInfo.SignerInfo.Time
 	}
 
 	if signInfo.Type == SignTypeCert {
