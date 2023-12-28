@@ -110,11 +110,13 @@ func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signI
 func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
 	sig := models.Sig{}
 
-	sig.Name = signInfo.SignerInfo.Name
-	sig.Reason = signInfo.SignerInfo.Reason
-	sig.ContactInfo = signInfo.SignerInfo.ContactInfo
-	sig.Location = signInfo.SignerInfo.Location
-	sig.Time = &signInfo.SignerInfo.Date
+	if signInfo.SignerInfo != nil {
+		sig.Name = signInfo.SignerInfo.Name
+		sig.Reason = signInfo.SignerInfo.Reason
+		sig.ContactInfo = signInfo.SignerInfo.ContactInfo
+		sig.Location = signInfo.SignerInfo.Location
+		sig.Time = &signInfo.SignerInfo.Time
+	}
 
 	if signInfo.Type == SignTypeCert {
 		sig.References = []*models.SigRef{{

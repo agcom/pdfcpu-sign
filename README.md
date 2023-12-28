@@ -29,6 +29,21 @@ There is only one HTTP API endpoint.
 
 Receives a signature information JSON object beside a PDF document, both bundled in a `multipart/form-data` request (`sign-info` and `pdf-file` fields); returns the signed PDF document.
 
+The signature information model:
+```json
+{
+	"type": "certification", // Required; possible values are certification and approval.
+	"docMdp": "no-changes", // Required if type=certification; possible values are no-changes, form-sign, and form-sign-annot.
+	"signerInfo": { // Optional
+		"name": "Alireza", // Optional
+		"location": "Earth", // Optional
+		"reason": "Test", // Optional
+		"contactInfo": "example@example.com", // Optional
+		"time": "2020-10-21T05:00:57.258Z" // Required; ISO-8601 representation of a date-time.
+	}
+}
+```
+
 Example request:
 
 ```text

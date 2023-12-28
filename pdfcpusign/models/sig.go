@@ -154,7 +154,9 @@ func (s *Sig) ToPdfDict() types.Dict {
 		dict["Name"] = types.StringLiteral(s.Name)
 	}
 
-	dict.Update("M", types.StringLiteral(types.DateString(*s.Time)))
+	if s.Time != nil {
+		dict.Update("M", types.StringLiteral(types.DateString(*s.Time)))
+	}
 
 	if s.Location != "" {
 		dict["Location"] = types.StringLiteral(s.Location)

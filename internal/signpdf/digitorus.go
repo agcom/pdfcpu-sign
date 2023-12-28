@@ -121,16 +121,32 @@ func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfs
 }
 
 func (si *SignInfo) ToDigitorusModel() *pdfsign.SignDataSignature {
+	if si == nil {
+		return nil
+	}
+
+	info := si.SignerInfo.ToDigitorusModel()
+	if info == nil {
+		info = &pdfsign.SignDataSignatureInfo{}
+	}
+
 	return &pdfsign.SignDataSignature{
 		CertType:   si.Type.ToDigitorusModel(),
 		DocMDPPerm: si.DocMdp.ToDigitorusModel(),
-		Info: pdfsign.SignDataSignatureInfo{
-			Name:        si.SignerInfo.Name,
-			Location:    si.SignerInfo.Location,
-			Reason:      si.SignerInfo.Reason,
-			ContactInfo: si.SignerInfo.ContactInfo,
-			Date:        si.SignerInfo.Date,
-		},
+		Info:       *info,
+	}
+}
+
+func (si *SignerInfo) ToDigitorusModel() *pdfsign.SignDataSignatureInfo {
+	if si == nil {
+		return nil
+	}
+	return &pdfsign.SignDataSignatureInfo{
+		Name:        si.Name,
+		Location:    si.Location,
+		Reason:      si.Reason,
+		ContactInfo: si.ContactInfo,
+		Date:        si.Time,
 	}
 }
 

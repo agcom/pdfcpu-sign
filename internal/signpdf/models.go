@@ -37,7 +37,7 @@ type SignerInfo struct {
 	Location    string
 	Reason      string
 	ContactInfo string
-	Date        time.Time
+	Time        time.Time // TODO: this should be optional as specification states.
 }
 
 // SignInfo holds a signing procedure information;
@@ -45,5 +45,5 @@ type SignerInfo struct {
 type SignInfo struct {
 	Type       SignType
 	DocMdp     DocMdp
-	SignerInfo SignerInfo
+	SignerInfo *SignerInfo
 }

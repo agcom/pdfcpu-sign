@@ -116,7 +116,7 @@ func Test_postSign(t *testing.T) {
 	signInfo := signpdf.SignInfo{
 		Type:   signpdf.SignTypeCert,
 		DocMdp: signpdf.DocMdpNoChanges,
-		SignerInfo: signpdf.SignerInfo{
+		SignerInfo: &signpdf.SignerInfo{
 			Name:        "Alireza",
 			Location:    "Earth",
 			Reason:      "Test",

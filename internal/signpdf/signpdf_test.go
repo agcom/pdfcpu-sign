@@ -77,12 +77,12 @@ func newTestCertSignInfo() *SignInfo {
 	return &SignInfo{
 		Type:   SignTypeCert,
 		DocMdp: DocMdpNoChanges,
-		SignerInfo: SignerInfo{
+		SignerInfo: &SignerInfo{
 			Name:        "Alireza",
 			Location:    "Earth",
 			Reason:      "Test",
 			ContactInfo: "example@exmaple.com",
-			Date:        time.Now(),
+			Time:        time.Now(),
 		},
 	}
 }
@@ -90,12 +90,12 @@ func newTestCertSignInfo() *SignInfo {
 func newTestApprovalSignInfo() *SignInfo {
 	return &SignInfo{
 		Type: SignTypeApproval,
-		SignerInfo: SignerInfo{
+		SignerInfo: &SignerInfo{
 			Name:        "Alireza",
 			Location:    "Earth",
 			Reason:      "Test",
 			ContactInfo: "example@exmaple.com",
-			Date:        time.Now(),
+			Time:        time.Now(),
 		},
 	}
 }
