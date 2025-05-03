@@ -3,8 +3,8 @@ package http
 import (
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/pkcs11"
-	"github.com/agcom/pdfcpu-sign/internal/signpdf"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/signpdf"
 	"log/slog"
 )
 

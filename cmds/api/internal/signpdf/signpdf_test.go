@@ -16,7 +16,7 @@ import (
 )
 
 func PdfSignerTests(t *testing.T, ps PdfSigner) {
-	const pdfCpuSignSamplesDir = "./../../pdfcpusign/_samples/"
+	const pdfCpuSignSamplesDir = "./../../../../pdfcpusign/_samples/"
 	samplesEntries, err := os.ReadDir(pdfCpuSignSamplesDir)
 	require.NoError(t, err)
 

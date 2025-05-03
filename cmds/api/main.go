@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/agcom/pdfcpu-sign/internal/http"
-	"github.com/agcom/pdfcpu-sign/internal/pkcs11"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/http"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
 	"log"
 	"log/slog"
 )

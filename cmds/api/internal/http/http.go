@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/internal/signpdf"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/signpdf"
 	"github.com/go-chi/chi/v5"
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"golang.org/x/net/http2"

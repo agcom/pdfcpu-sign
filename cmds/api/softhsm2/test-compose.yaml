@@ -11,7 +11,7 @@ services:
     working_dir: /src/
     command: sleep infinity
     volumes:
-      - ./../:/src/ # TODO: make it read only mount (currently blocked by a test writing to a local file).
+      - ./../../../:/src/ # TODO: make it read only mount (currently blocked by a test writing to a local file).
       - softhsm:/var/lib/softhsm/
       - go-pkg-cache:/go/pkg/
       - go-build-cache:/root/.cache/go-build/
@@ -21,7 +21,7 @@ services:
     working_dir: /src/
     command: sleep infinity
     volumes:
-      - ./../:/src/:ro
+      - ./../../../:/src/:ro
       - softhsm:/var/lib/softhsm/
 
 volumes:
