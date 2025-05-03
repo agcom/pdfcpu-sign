@@ -2,6 +2,8 @@
 
 set -eE
 
+cd "$(dirname "$0")/"
+
 kert="${1-./test-kert.p12}"
 kert_pass="${2-1234}"
 

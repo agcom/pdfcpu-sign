@@ -2,6 +2,8 @@
 
 set -eE
 
+cd "$(dirname "$0")/"
+
 source ./softhsm2/common.zsh
 
 token_pin=1234
