@@ -4,7 +4,7 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
+	"github.com/agcom/pdfcpu-sign/testutils"
 	"log/slog"
 	"os"
 	"path"

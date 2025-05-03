@@ -3,7 +3,7 @@ package signpdf
 import (
 	"errors"
 	"fmt"
-	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
+	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/testutils"
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/stretchr/testify/require"
 	"log/slog"
@@ -16,7 +16,7 @@ import (
 )
 
 func PdfSignerTests(t *testing.T, ps PdfSigner) {
-	const pdfCpuSignSamplesDir = "./../../../../pdfcpusign/_samples/"
+	const pdfCpuSignSamplesDir = "./../../../../_samples/"
 	samplesEntries, err := os.ReadDir(pdfCpuSignSamplesDir)
 	require.NoError(t, err)
 

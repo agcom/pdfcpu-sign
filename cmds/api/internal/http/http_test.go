@@ -10,7 +10,7 @@ import (
 	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
 	"github.com/agcom/pdfcpu-sign/cmds/api/internal/signpdf"
 	"github.com/agcom/pdfcpu-sign/cmds/api/internal/testutils"
-	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/pdfcpusign/testutils"
+	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/testutils"
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/stretchr/testify/require"
 	"io"

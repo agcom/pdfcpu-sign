@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/agcom/pdfcpu-sign/pdfcpusign/models"
+	"github.com/agcom/pdfcpu-sign/models"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
