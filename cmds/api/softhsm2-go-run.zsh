@@ -24,7 +24,7 @@ kert_id=$(import_kert "$token_slot" $token_pin "$kert" "$kert_pass")
 docker_compose run --rm \
 	-e SIGN_SERVER_PKCS11_TOKEN_SLOT="$token_slot" -e SIGN_SERVER_PKCS11_TOKEN_PIN="$token_pin" \
 	-e SIGN_SERVER_PKCS11_KERT_ID_HEX="$kert_id" \
-	-w /src/ \
+	-w /src/cmds/api \
 	-p 4648:4648 \
 	softhsm2go \
 	go run .

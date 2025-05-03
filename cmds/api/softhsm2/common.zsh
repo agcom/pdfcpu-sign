@@ -47,7 +47,7 @@ import_kert() {
 	kert_pass="${4-1234}"
 	kert_id="${5-$(rnd_num 4)}"
 
-	docker_compose run --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" softhsm2 \
+	docker_compose run --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" -w /src/cmds/api/ softhsm2 \
 		sh -c "source ./softhsm2/common.zsh && _import_kert '$token_slot' '$token_pin' '/tmp/golang-signserver-tests/kert.p12' '$kert_pass' '$kert_id'"
 }
 
