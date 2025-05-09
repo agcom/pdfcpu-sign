@@ -24,7 +24,7 @@ init_token() {
 
 rm_token() {
 	label="$1"
-	docker_compose run --rm softhsm2 softhsm2-util --delete-token --token "$label"
+	docker_compose run -q --rm softhsm2 softhsm2-util --delete-token --token "$label"
 }
 
 rnd_str() {
