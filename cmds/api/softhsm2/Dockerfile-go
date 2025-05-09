@@ -16,7 +16,7 @@ RUN sh ./autogen.sh \
     && make \
     && make install
 
-FROM golang:1.22.12-alpine3.20
+FROM golang:1.23.9-alpine3.20
 
 RUN apk --no-cache add libstdc++ openssl musl opensc build-base
 
