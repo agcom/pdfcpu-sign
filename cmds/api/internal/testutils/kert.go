@@ -7,7 +7,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"fmt"
-	"github.com/ThalesIgnite/crypto11"
+	"github.com/ThalesGroup/crypto11"
 	"io"
 	"log/slog"
 	"math/big"
