@@ -18,7 +18,7 @@ var rnd = mathrand.New(mathrand.NewSource(time.Now().UnixMilli()))
 func GenRsaKeyPair() *rsa.PrivateKey {
 	key, err := rsa.GenerateKey(rnd, 2048)
 	if err != nil {
-		panic(fmt.Errorf("failed to generate a RSA private key from a pseudo-random source; %w", err))
+		panic(fmt.Errorf("failed to generate an RSA private key from a pseudo-random source; %w", err))
 	}
 	return key
 }
