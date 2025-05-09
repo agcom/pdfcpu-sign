@@ -67,8 +67,12 @@ func (sr *SigRef) ToPdfDict() types.Dict {
 
 	dict["TransformMethod"] = types.Name(sr.TransformMethod)
 
-	dict.Update("TransformParams", sr.TransformParams.ToPdfDict())
-	dict.Update("Data", sr.Data)
+	if sr.TransformParams != nil {
+		dict["TransformParams"] = sr.TransformParams.ToPdfDict()
+	}
+	if sr.Data != nil {
+		dict["Data"] = *sr.Data
+	}
 
 	if sr.DigestMethod != 0 {
 		dict["DigestMethod"] = types.Name(strings.ReplaceAll(sr.DigestMethod.String(), "-", ""))
@@ -148,14 +152,16 @@ func (s *Sig) ToPdfDict() types.Dict {
 		dict["Reference"] = refs
 	}
 
-	dict.Update("Changes", s.Changes.ToPdfArr())
+	if s.Changes != nil {
+		dict["Changes"] = s.Changes.ToPdfArr()
+	}
 
 	if s.Name != "" {
 		dict["Name"] = types.StringLiteral(s.Name)
 	}
 
 	if !s.Time.IsZero() {
-		dict.Update("M", types.StringLiteral(types.DateString(s.Time)))
+		dict["M"] = types.StringLiteral(types.DateString(s.Time))
 	}
 
 	if s.Location != "" {
