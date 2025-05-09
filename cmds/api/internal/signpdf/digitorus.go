@@ -151,7 +151,7 @@ func (si *SignerInfo) ToDigitorusModel() *pdfsign.SignDataSignatureInfo {
 	}
 }
 
-func (st SignType) ToDigitorusModel() uint {
+func (st SignType) ToDigitorusModel() pdfsign.CertType {
 	switch st {
 	case SignTypeCert:
 		return pdfsign.CertificationSignature
@@ -162,7 +162,7 @@ func (st SignType) ToDigitorusModel() uint {
 	panic(fmt.Sprintf("invalid SignType enum value %q", st))
 }
 
-func (dm DocMdp) ToDigitorusModel() uint {
+func (dm DocMdp) ToDigitorusModel() pdfsign.DocMDPPerm {
 	switch dm {
 	case DocMdpNoChanges:
 		return pdfsign.DoNotAllowAnyChangesPerms
