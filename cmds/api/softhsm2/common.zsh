@@ -10,14 +10,14 @@ docker_compose() {
 
 # Finds the latest empty slot id.
 find_empty_slot() {
-	docker_compose run --rm softhsm2 softhsm2-util --show-slots | grep -Po '^Slot \K\d+$' | tail -n 1
+	docker_compose run -q --rm softhsm2 softhsm2-util --show-slots | grep -Po '^Slot \K\d+$' | tail -n 1
 }
 
 init_token() {
 	label="${1-test}"
 	pin="${2-1234}"
 
-	docker_compose run --rm softhsm2 \
+	docker_compose run -q --rm softhsm2 \
 		softhsm2-util --init-token --slot "$(find_empty_slot)" --label "$label" --pin "$pin" --so-pin "$pin" |
 		awk '{print $NF}'
 }
@@ -47,7 +47,7 @@ import_kert() {
 	kert_pass="${4-1234}"
 	kert_id="${5-$(rnd_num 4)}"
 
-	docker_compose run --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" -w /src/cmds/api/ softhsm2 \
+	docker_compose run -q --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" -w /src/cmds/api/ softhsm2 \
 		sh -c "source ./softhsm2/common.zsh && _import_kert '$token_slot' '$token_pin' '/tmp/golang-signserver-tests/kert.p12' '$kert_pass' '$kert_id'"
 }
 

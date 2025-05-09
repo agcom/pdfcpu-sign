@@ -1,6 +1,6 @@
 module github.com/agcom/pdfcpu-sign
 
-go 1.21.5
+go 1.22.12
 
 replace github.com/pdfcpu/pdfcpu v0.6.0 => github.com/agcom/pdfcpu v0.0.0-20231221171746-ebd05427297a
 
