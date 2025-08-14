@@ -2,7 +2,7 @@ module github.com/agcom/pdfcpu-sign
 
 go 1.25.0
 
-replace github.com/pdfcpu/pdfcpu v0.10.2 => github.com/agcom/pdfcpu v0.0.0-20250509193558-3bd766b1fbc5
+replace github.com/pdfcpu/pdfcpu v0.10.2 => github.com/agcom/pdfcpu v0.0.0-20250814212613-66ea3796aac4
 
 require (
 	github.com/ThalesGroup/crypto11 v1.4.1
