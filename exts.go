@@ -1,11 +1,12 @@
-package handlers
+package pdfcpu_sign
 
 import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 	"regexp"
+
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
 // strPdfArrElem is useful for encoding elements of a byte range array (in a signature dictionary);

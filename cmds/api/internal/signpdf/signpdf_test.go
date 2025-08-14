@@ -3,9 +3,6 @@ package signpdf
 import (
 	"errors"
 	"fmt"
-	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/testutils"
-	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/stretchr/testify/require"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -13,6 +10,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	pdfcpusigntestutils "github.com/agcom/pdfcpu-sign/testutils"
+	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/stretchr/testify/require"
 )
 
 func PdfSignerTests(t *testing.T, ps PdfSigner) {

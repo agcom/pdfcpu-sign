@@ -2,10 +2,11 @@ package http
 
 import (
 	"fmt"
+	"os"
+
 	_ "github.com/agcom/pdfcpu-sign/cmds/api/internal/conf"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
-	"os"
 )
 
 const confKeyPrefix = "http_"

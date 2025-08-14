@@ -5,12 +5,13 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
-	"github.com/agcom/pdfcpu-sign/cmds/api/internal/testutils"
 	"log"
 	"log/slog"
 	"os"
 	"testing"
+
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
+	"github.com/agcom/pdfcpu-sign/cmds/api/internal/testutils"
 )
 
 var pvKey crypto.PrivateKey

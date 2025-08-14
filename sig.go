@@ -1,11 +1,12 @@
-package models
+package pdfcpu_sign
 
 import (
 	"crypto"
 	"crypto/x509"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 	"strings"
 	"time"
+
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 )
 
 type SigType string

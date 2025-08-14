@@ -7,12 +7,13 @@ import (
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"fmt"
-	"github.com/ThalesGroup/crypto11"
 	"io"
 	"log/slog"
 	"math/big"
 	mathrand "math/rand"
 	"time"
+
+	"github.com/ThalesGroup/crypto11"
 )
 
 // We do not need to consume the cryptographical random numbers for testing.

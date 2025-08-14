@@ -1,4 +1,4 @@
-package handlers
+package pdfcpu_sign
 
 import (
 	"bufio"
@@ -7,12 +7,12 @@ import (
 	"crypto/x509"
 	"encoding/asn1"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/models"
+	"io"
+
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 	"github.com/smallstep/pkcs7"
-	"io"
 )
 
 type adobePkcs7DetachedSigHandler struct {
@@ -50,7 +50,7 @@ func NewAdobePkcs7DetachedSigHandler(
 	}
 }
 
-func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *models.Sig) error {
+func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error {
 	var err error
 
 	// Preserve the original PDF bytes before altering the non-increment-aware context.
@@ -86,7 +86,7 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *models.Sig)
 		return fmt.Errorf("failed to initialize a signature; %w", err)
 	}
 
-	sigField := models.SigField{}
+	sigField := SigField{}
 	err, sigDict := h.initSigField(ctx, sig, &sigField)
 	if err != nil {
 		return fmt.Errorf("failed to initialize a signature field; %w", err)
@@ -298,10 +298,10 @@ func writeAll(ctx *model.Context) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (h *adobePkcs7DetachedSigHandler) initSig(sig *models.Sig) error {
-	sig.Type = models.SigTypeSig
-	sig.Filter = models.FilterAdobePpkLite
-	sig.SubFilter = models.SubFilterAdobePkcs7Detached
+func (h *adobePkcs7DetachedSigHandler) initSig(sig *Sig) error {
+	sig.Type = SigTypeSig
+	sig.Filter = FilterAdobePpkLite
+	sig.SubFilter = SubFilterAdobePkcs7Detached
 
 	// These should not be set when using this signature handler.
 	sig.Cert = nil
@@ -310,7 +310,7 @@ func (h *adobePkcs7DetachedSigHandler) initSig(sig *models.Sig) error {
 
 	// TODO: does the added signature field should be counted in this (currently the following code does so)?
 	if sig.Changes == nil {
-		sig.Changes = &models.SigChanges{}
+		sig.Changes = &SigChanges{}
 	}
 	sig.Changes.FieldsAltered++
 	sig.Changes.FieldsFilledIn++
@@ -330,14 +330,14 @@ func (h *adobePkcs7DetachedSigHandler) initSig(sig *models.Sig) error {
 // initSigField initializes the given brand-new signature field.
 // The function is not ready for initializing an already existing signature field.
 // It mutates the given context by inserting the given signature dictionary and a signature field lock dictionary if it is a certification signature.
-func (h *adobePkcs7DetachedSigHandler) initSigField(ctx *model.Context, sig *models.Sig, sigField *models.SigField) (error, types.Dict) {
+func (h *adobePkcs7DetachedSigHandler) initSigField(ctx *model.Context, sig *Sig, sigField *SigField) (error, types.Dict) {
 	nameTrail, err := rndSigFieldNameTrail()
 	if err != nil {
 		return fmt.Errorf("failed to generate a random trailing string for a signature field partial name; %w", err), nil
 	}
 
 	sigField.PartialName = "Signature_" + nameTrail
-	sigField.FieldFlags = models.FieldFlagRequired | models.FieldFlagReadOnly | models.FieldFlagNoExport
+	sigField.FieldFlags = FieldFlagRequired | FieldFlagReadOnly | FieldFlagNoExport
 
 	sigDict := sig.ToPdfDict()
 	sigRef, err := ctx.IndRefForNewObject(sigDict)
@@ -350,8 +350,8 @@ func (h *adobePkcs7DetachedSigHandler) initSigField(ctx *model.Context, sig *mod
 	// TODO: should we create a SigFieldLock and add the signature field itself to it if it is an approval signature?
 	// If it is a certification signature, add the signature field lock dictionary.
 	if ok, perm := isCertSig(sig); ok {
-		sigFieldLock := models.SigFieldLock{
-			Action: models.FieldMdpActionAll,
+		sigFieldLock := SigFieldLock{
+			Action: FieldMdpActionAll,
 			Perm:   perm,
 		}
 
@@ -397,7 +397,7 @@ func (h *adobePkcs7DetachedSigHandler) marshalSig(data []byte) ([]byte, error) {
 }
 
 // allocContents determines the size of the contents entry by signing a dummy data.
-func (h *adobePkcs7DetachedSigHandler) allocContents(sig *models.Sig) error {
+func (h *adobePkcs7DetachedSigHandler) allocContents(sig *Sig) error {
 	dummyMarshaledSig, err := h.marshalSig([]byte("Dummy data..."))
 	if err != nil {
 		return fmt.Errorf("failed to determine the size of the contents entry in a signature by signing a dummy data; %w", err)
@@ -409,10 +409,10 @@ func (h *adobePkcs7DetachedSigHandler) allocContents(sig *models.Sig) error {
 
 // isCertSig checks if the given signature is intended for certification,
 // and if it is so, returns the associated permission.
-func isCertSig(sig *models.Sig) (bool, models.DocMdpPerm) {
+func isCertSig(sig *Sig) (bool, DocMdpPerm) {
 	for _, sigRef := range sig.References {
-		if sigRef.TransformMethod == models.TransformMethodDocMdp {
-			return true, sigRef.TransformParams.(*models.TransformParamsDocMdp).Perm
+		if sigRef.TransformMethod == TransformMethodDocMdp {
+			return true, sigRef.TransformParams.(*TransformParamsDocMdp).Perm
 		}
 	}
 

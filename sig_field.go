@@ -1,4 +1,4 @@
-package models
+package pdfcpu_sign
 
 import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"

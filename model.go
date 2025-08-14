@@ -1,6 +1,10 @@
-package models
+package pdfcpu_sign
 
-import "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+import (
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
+)
+
+// TODO: get rid of these base interface if possible.
 
 type PdfModel interface {
 	ToPdfObj() types.Object

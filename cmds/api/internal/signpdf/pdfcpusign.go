@@ -4,17 +4,17 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/handlers"
-	"github.com/agcom/pdfcpu-sign/models"
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	pdfcpuModel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 	"io"
 	"log/slog"
 	"os"
+
+	pdfcpusign "github.com/agcom/pdfcpu-sign"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	pdfcpuModel "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
 type PdfCpuSignPdfSigner struct {
-	h handlers.SigHandler
+	h pdfcpusign.SigHandler
 }
 
 func NewPdfCpuSignPdfSigner(
@@ -22,7 +22,7 @@ func NewPdfCpuSignPdfSigner(
 	cert *x509.Certificate,
 	certParents []*x509.Certificate,
 ) *PdfCpuSignPdfSigner {
-	return &PdfCpuSignPdfSigner{handlers.NewAdobePkcs7DetachedSigHandler(pvKey, cert, certParents, crypto.SHA512)}
+	return &PdfCpuSignPdfSigner{pdfcpusign.NewAdobePkcs7DetachedSigHandler(pvKey, cert, certParents, crypto.SHA512)}
 }
 
 func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signInfo *SignInfo) error {
@@ -107,8 +107,8 @@ func (ps *PdfCpuSignPdfSigner) Sign(input io.ReadSeeker, output io.Writer, signI
 	return nil
 }
 
-func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
-	sig := models.Sig{}
+func signInfoToPdfCpuSignSig(signInfo *SignInfo) *pdfcpusign.Sig {
+	sig := pdfcpusign.Sig{}
 
 	if signInfo.SignerInfo != nil {
 		sig.Name = signInfo.SignerInfo.Name
@@ -119,9 +119,9 @@ func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
 	}
 
 	if signInfo.Type == SignTypeCert {
-		sig.References = []*models.SigRef{{
-			TransformMethod: models.TransformMethodDocMdp,
-			TransformParams: &models.TransformParamsDocMdp{
+		sig.References = []*pdfcpusign.SigRef{{
+			TransformMethod: pdfcpusign.TransformMethodDocMdp,
+			TransformParams: &pdfcpusign.TransformParamsDocMdp{
 				Perm: docMdpToPdfCpuSignDocMdp(signInfo.DocMdp),
 			},
 		}}
@@ -130,14 +130,14 @@ func signInfoToPdfCpuSignSig(signInfo *SignInfo) *models.Sig {
 	return &sig
 }
 
-func docMdpToPdfCpuSignDocMdp(docMdp DocMdp) models.DocMdpPerm {
+func docMdpToPdfCpuSignDocMdp(docMdp DocMdp) pdfcpusign.DocMdpPerm {
 	switch docMdp {
 	case DocMdpNoChanges:
-		return models.DocMdpPermNoChanges
+		return pdfcpusign.DocMdpPermNoChanges
 	case DocMdpFormSign:
-		return models.DocMdpPermFormFillInAndPageTemplateInstAndSign
+		return pdfcpusign.DocMdpPermFormFillInAndPageTemplateInstAndSign
 	case DocMdpFormSignAnnot:
-		return models.DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot
+		return pdfcpusign.DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot
 	}
 
 	panic(fmt.Sprintf("invalid DocMDP=%s", docMdp))

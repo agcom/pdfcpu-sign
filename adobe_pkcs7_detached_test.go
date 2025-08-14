@@ -1,14 +1,9 @@
-package handlers
+package pdfcpu_sign
 
 import (
 	"crypto"
 	"errors"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/models"
-	"github.com/agcom/pdfcpu-sign/testutils"
-	"github.com/pdfcpu/pdfcpu/pkg/api"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"github.com/stretchr/testify/require"
 	"io"
 	"log/slog"
 	"os"
@@ -17,6 +12,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/agcom/pdfcpu-sign/testutils"
+	"github.com/pdfcpu/pdfcpu/pkg/api"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_adobePkcs7DetachedSigHandler_Sign(t *testing.T) {
@@ -32,16 +32,16 @@ func Test_adobePkcs7DetachedSigHandler_Sign(t *testing.T) {
 
 	t.Run("approval over certification", func(t *testing.T) {
 		certSig := newTestCertSig()
-		certSig.References[0].TransformParams.(*models.TransformParamsDocMdp).Perm = models.DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot
+		certSig.References[0].TransformParams.(*TransformParamsDocMdp).Perm = DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot
 
-		certPdfPath := testSample(t, h, "../_samples/form-filled.pdf", certSig)
+		certPdfPath := testSample(t, h, "./_samples/form-filled.pdf", certSig)
 
 		approvalSig := newTestApprovalSig()
 		testSample(t, h, certPdfPath, approvalSig)
 	})
 }
 
-func testSamples(t *testing.T, h SigHandler, sig *models.Sig) {
+func testSamples(t *testing.T, h SigHandler, sig *Sig) {
 	for _, sample := range samples {
 		if strings.Contains(sample, "cert") {
 			continue
@@ -53,7 +53,7 @@ func testSamples(t *testing.T, h SigHandler, sig *models.Sig) {
 	}
 }
 
-func testSample(t *testing.T, h SigHandler, sample string, sig *models.Sig) string {
+func testSample(t *testing.T, h SigHandler, sample string, sig *Sig) string {
 	// Read.
 
 	readConf := model.NewDefaultConfiguration()
@@ -131,12 +131,12 @@ func testSample(t *testing.T, h SigHandler, sample string, sig *models.Sig) stri
 	return out.Name()
 }
 
-func newTestCertSig() *models.Sig {
-	sig := models.Sig{
-		References: []*models.SigRef{{
-			TransformMethod: models.TransformMethodDocMdp,
-			TransformParams: &models.TransformParamsDocMdp{
-				Perm: models.DocMdpPermNoChanges,
+func newTestCertSig() *Sig {
+	sig := Sig{
+		References: []*SigRef{{
+			TransformMethod: TransformMethodDocMdp,
+			TransformParams: &TransformParamsDocMdp{
+				Perm: DocMdpPermNoChanges,
 			},
 		}},
 		Time:        time.Now(),
@@ -149,8 +149,8 @@ func newTestCertSig() *models.Sig {
 	return &sig
 }
 
-func newTestApprovalSig() *models.Sig {
-	sig := models.Sig{
+func newTestApprovalSig() *Sig {
+	sig := Sig{
 		Time:        time.Now(),
 		Name:        "Alireza",
 		Reason:      "Test",

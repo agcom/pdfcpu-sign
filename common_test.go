@@ -1,14 +1,15 @@
-package handlers
+package pdfcpu_sign
 
 import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/agcom/pdfcpu-sign/testutils"
 	"log/slog"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/agcom/pdfcpu-sign/testutils"
 )
 
 var pvKey crypto.PrivateKey
@@ -19,7 +20,7 @@ func init() {
 	pvKey, pubKey, cert = testutils.GenKert()
 }
 
-const samplesDirRel = "./../_samples/"
+const samplesDirRel = "./_samples/"
 
 var samples []string
 

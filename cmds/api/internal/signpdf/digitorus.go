@@ -4,13 +4,14 @@ import (
 	"crypto"
 	"crypto/x509"
 	"fmt"
-	"github.com/digitorus/pdfsign/revocation"
-	pdfsign "github.com/digitorus/pdfsign/sign"
-	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 	"io"
 	"log/slog"
 	"os"
 	"time"
+
+	"github.com/digitorus/pdfsign/revocation"
+	pdfsign "github.com/digitorus/pdfsign/sign"
+	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
 )
 
 type DigitorusPdfSigner struct {

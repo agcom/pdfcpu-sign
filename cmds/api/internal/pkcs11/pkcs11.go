@@ -9,10 +9,11 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/ThalesGroup/crypto11"
 	"log/slog"
 	"os"
 	"time"
+
+	"github.com/ThalesGroup/crypto11"
 )
 
 var _crypto11Ctx *crypto11.Context

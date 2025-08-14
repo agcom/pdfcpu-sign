@@ -3,9 +3,10 @@ package http
 import (
 	"crypto/x509"
 	"fmt"
+	"log/slog"
+
 	"github.com/agcom/pdfcpu-sign/cmds/api/internal/pkcs11"
 	"github.com/agcom/pdfcpu-sign/cmds/api/internal/signpdf"
-	"log/slog"
 )
 
 // TODO: move this to a more appropriate place?
