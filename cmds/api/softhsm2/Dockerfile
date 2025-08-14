@@ -2,15 +2,17 @@ FROM alpine:3.22.1 AS builder
 
 ARG SOFTHSM_V2_VERSION=2.6.1
 
-RUN apk --update add \
-    git \
-    openssl-dev \
-    automake autoconf libtool pkgconfig \
-    alpine-sdk
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk --update add \
+    	git \
+    	openssl-dev \
+    	automake autoconf libtool pkgconfig \
+    	alpine-sdk
 
 RUN git clone -b ${SOFTHSM_V2_VERSION} https://github.com/opendnssec/SoftHSMv2.git /tmp/SoftHSMv2/
 WORKDIR /tmp/SoftHSMv2/
 
+# TODO: cache mount the build.
 RUN sh ./autogen.sh \
     && ./configure \
     && make \
@@ -18,7 +20,8 @@ RUN sh ./autogen.sh \
 
 FROM alpine:3.22.1
 
-RUN apk --no-cache add libstdc++ openssl musl opensc
+RUN --mount=type=cache,target=/var/cache/apk \
+	apk add libstdc++ openssl musl opensc
 
 COPY --from=builder /usr/local/lib/softhsm/ /usr/local/lib/softhsm/
 COPY --from=builder /usr/local/bin/softhsm* /usr/local/bin/
