@@ -6,7 +6,7 @@ replace github.com/pdfcpu/pdfcpu v0.10.2 => github.com/agcom/pdfcpu v0.0.0-20250
 
 require (
 	github.com/ThalesGroup/crypto11 v1.4.1
-	github.com/digitorus/pdfsign v0.0.0-20250310195202-94790aeb1f48
+	github.com/digitorus/pdfsign v0.0.0-20250812050719-e5551710f065
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/pdfcpu/pdfcpu v0.11.0
 	github.com/smallstep/pkcs7 v0.2.1
