@@ -1,4 +1,4 @@
-FROM alpine:3.20.6 AS builder
+FROM alpine:3.22.1 AS builder
 
 ARG SOFTHSM_V2_VERSION=2.6.1
 
@@ -16,7 +16,7 @@ RUN sh ./autogen.sh \
     && make \
     && make install
 
-FROM golang:1.24.3-alpine3.20
+FROM golang:1.25.0-alpine3.22
 
 RUN apk --no-cache add libstdc++ openssl musl opensc build-base
 
