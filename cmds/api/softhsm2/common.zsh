@@ -1,9 +1,9 @@
 #!/usr/bin/zsh
 
-# Expects set -e, but does not apply it in here.
-#set -e
+# Expects `set -eE`, but does not apply it in here.
+#set -eE
 
-# This function expects to be called from the project/repository's root directory. TODO: overcome this limitation.
+# This function expects to be called from the cmd's root directory. TODO: overcome this limitation.
 docker_compose() {
 	docker compose -f ./softhsm2/test-compose.yaml "$@"
 }
