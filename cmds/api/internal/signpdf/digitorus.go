@@ -97,7 +97,7 @@ func (ps *DigitorusPdfSigner) SignDigitorus(input, output string, signData *pdfs
 	ver := pdfCtx.VersionString()
 
 	// TODO: if PDF version is below 1.3, convert the PDF into the latest supported version and then sign (instead of returning an error).
-	digestAlg, err := bestDigestAlgPdfVer(ver)
+	digestAlg, err := bestDigestAlgForPdfVer(ver)
 	if err != nil { // TODO: optimize the PDF input to bump the PDF version and support signing anyway.
 		return fmt.Errorf("signing not supported; %w", err)
 	}
