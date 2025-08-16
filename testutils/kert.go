@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"math/big"
 	mathrand "math/rand"
-	"software.sslmate.com/src/go-pkcs12"
 	"time"
+
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 var rnd = mathrand.New(mathrand.NewSource(time.Now().UnixMilli()))

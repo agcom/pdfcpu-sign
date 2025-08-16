@@ -1,9 +1,10 @@
 package testutils
 
 import (
+	"io"
+
 	pdfcpu "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
-	"io"
 )
 
 var strictValidConf = model.NewDefaultConfiguration()
