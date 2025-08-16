@@ -19,7 +19,7 @@ type adobePkcs7DetachedSigHandler struct {
 	pvKey crypto.PrivateKey
 	cert  *x509.Certificate
 
-	// certParents is  trust chain for the cert
+	// certParents is trust chain for the cert
 	// (should not contain the cert itself as the first element).
 	// Can be empty (for example when the cert is self-signed or is from a trusted CA).
 	certParents []*x509.Certificate
