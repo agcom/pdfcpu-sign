@@ -3,7 +3,11 @@ package pdfcpu_sign
 import "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 
 // TransformParams should either be TransformParamsDocMdp or TransformParamsFieldMdp.
-type TransformParams any
+type TransformParams interface {
+	transformParams()
+
+	ToPdfDict() types.Dict
+}
 
 type TransformMethod string
 
@@ -33,10 +37,11 @@ func NewTransformParamsDocMdp() *TransformParamsDocMdp {
 	}
 }
 
+func (tp *TransformParamsDocMdp) transformParams() {}
 func (tp *TransformParamsDocMdp) ToPdfDict() types.Dict {
 	dict := types.NewDict()
 
-	dict["Type"] = types.Name("TransformParams")
+	dict["Type"] = types.Name("TransformParams") // FIXME: this can be absent.
 	dict["P"] = types.Integer(tp.Perm)
 
 	if tp.Version != "" && tp.Version != "1.2" { // Skip writing zero & default value.
@@ -44,10 +49,6 @@ func (tp *TransformParamsDocMdp) ToPdfDict() types.Dict {
 	}
 
 	return dict
-}
-
-func (tp *TransformParamsDocMdp) ToPdfObj() types.Object {
-	return tp.ToPdfDict()
 }
 
 type FieldMdpAction string
@@ -69,6 +70,26 @@ func NewTransformParamsFieldMdp() *TransformParamsFieldMdp {
 	return &TransformParamsFieldMdp{
 		Version: "1.2",
 	}
+}
+
+func (tp *TransformParamsFieldMdp) transformParams() {}
+func (tp *TransformParamsFieldMdp) ToPdfDict() types.Dict {
+	dict := types.NewDict()
+
+	//dict["Type"] = types.Name("TransformParams") // Can be absent.
+	dict["Action"] = types.Name(tp.Action)
+	switch tp.Action {
+	case FieldMdpActionExclude, FieldMdpActionInclude:
+		dict["Fields"] = types.NewStringLiteralArray(tp.Fields...)
+	default:
+		// NOP.
+	}
+
+	if tp.Version != "" && tp.Version != "1.2" { // Skip writing zero & default value.
+		dict["V"] = types.Name(tp.Version)
+	}
+
+	return dict
 }
 
 // TODO: type SignatureReferenceTransformParamsUsageRights struct { ... }

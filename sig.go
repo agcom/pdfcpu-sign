@@ -42,10 +42,6 @@ func (sc *SigChanges) ToPdfArr() types.Array {
 	return types.NewIntegerArray(sc.PagesAltered, sc.FieldsAltered, sc.FieldsFilledIn)
 }
 
-func (sc *SigChanges) ToPdfObj() types.Object {
-	return sc.ToPdfArr()
-}
-
 type PropAuthType string
 
 const (
@@ -56,7 +52,7 @@ const (
 
 type SigRef struct {
 	TransformMethod TransformMethod
-	TransformParams PdfDictModel // TODO: this can also be an indirect reference.
+	TransformParams TransformParams // TODO: this can also be an indirect reference.
 	Data            *types.IndirectRef
 	DigestMethod    crypto.Hash // Deprecated in PDF 2.0. TODO: this value is way more limited than crypto.Hash available values.
 }
@@ -80,10 +76,6 @@ func (sr *SigRef) ToPdfDict() types.Dict {
 	}
 
 	return dict
-}
-
-func (sr *SigRef) ToPdfObj() types.Object {
-	return sr.ToPdfDict()
 }
 
 type Sig struct {
@@ -198,8 +190,4 @@ func (s *Sig) ToPdfDict() types.Dict {
 	}
 
 	return dict
-}
-
-func (s *Sig) ToPdfObj() types.Object {
-	return s.ToPdfDict()
 }

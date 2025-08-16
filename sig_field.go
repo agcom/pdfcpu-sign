@@ -34,10 +34,6 @@ func (s *SigFieldLock) ToPdfDict() types.Dict {
 	return dict
 }
 
-func (s *SigFieldLock) ToPdfObj() types.Object {
-	return s.ToPdfDict()
-}
-
 type SigField struct {
 	Page              *types.IndirectRef // P
 	Parent            *types.IndirectRef
@@ -117,10 +113,6 @@ func (sf *SigField) ToPdfDict() types.Dict {
 	}
 
 	return dict
-}
-
-func (sf *SigField) ToPdfObj() types.Object {
-	return sf.ToPdfDict()
 }
 
 // TODO: define the Field type and embed into SigField.
