@@ -1,4 +1,4 @@
-package pdfcpu_sign
+package pdfcpusign
 
 import "github.com/pdfcpu/pdfcpu/pkg/pdfcpu/types"
 

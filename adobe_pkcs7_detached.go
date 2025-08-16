@@ -1,4 +1,4 @@
-package pdfcpu_sign
+package pdfcpusign
 
 import (
 	"bufio"
