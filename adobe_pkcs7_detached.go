@@ -50,23 +50,23 @@ func NewAdobePkcs7DetachedSigHandler(
 	}
 }
 
-func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error {
+func (h *adobePkcs7DetachedSigHandler) Sign(pdfCtx *model.Context, sig *Sig) error {
 	var err error
 
 	// Preserve the original PDF bytes before altering the non-increment-aware context.
 	var originPdfBytes []byte
 	if h.isCtxOrigin {
-		originPdfBytes, err = writeAll(ctx)
+		originPdfBytes, err = writeAll(pdfCtx)
 		if err != nil {
 			return fmt.Errorf("failed to write a PDF context; %w", err)
 		}
 	} else {
-		_, err = ctx.Read.RS.Seek(0, io.SeekStart)
+		_, err = pdfCtx.Read.RS.Seek(0, io.SeekStart)
 		if err != nil {
 			return fmt.Errorf("failed to seek a PDF reader; %w", err)
 		}
-		originPdfBytes = make([]byte, ctx.Read.FileSize)
-		_, err = io.ReadFull(ctx.Read.RS, originPdfBytes)
+		originPdfBytes = make([]byte, pdfCtx.Read.FileSize)
+		_, err = io.ReadFull(pdfCtx.Read.RS, originPdfBytes)
 		if err != nil {
 			return fmt.Errorf("failed to read a PDF file bytes; %w", err)
 		}
@@ -87,22 +87,22 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 	}
 
 	sigField := SigField{}
-	err, sigDict := h.initSigField(ctx, sig, &sigField)
+	err, sigDict := h.initSigField(pdfCtx, sig, &sigField)
 	if err != nil {
 		return fmt.Errorf("failed to initialize a signature field; %w", err)
 	}
 
 	// Insert the signature field (which includes the signature).
 	sigFieldDict := sigField.ToPdfDict()
-	sigFieldRef, err := ctx.IndRefForNewObject(sigFieldDict)
+	sigFieldRef, err := pdfCtx.IndRefForNewObject(sigFieldDict)
 	if err != nil {
 		return fmt.Errorf("failed to insert a signature field dictionary; %w", err)
 	}
-	ctx.Write.IncrementWithObjNr(sigFieldRef.ObjectNumber.Value())
+	pdfCtx.Write.IncrementWithObjNr(sigFieldRef.ObjectNumber.Value())
 
 	// Update the annotations entry in the page dictionary referenced by the signature field.
 	if sigField.Page != nil {
-		pageDict, err := ctx.DereferenceDict(*sigField.Page)
+		pageDict, err := pdfCtx.DereferenceDict(*sigField.Page)
 		if err != nil {
 			return fmt.Errorf("failed to dereference a page indirect reference of a PDF; %w", err)
 		}
@@ -110,24 +110,24 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 		annotsObj := pageDict["Annots"]
 		if annotsObj == nil {
 			pageDict["Annots"] = types.Array{*sigFieldRef}
-			ctx.Write.IncrementWithObjNr(sigField.Page.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(sigField.Page.ObjectNumber.Value())
 		} else if annotsArr, ok := annotsObj.(types.Array); ok {
 			pageDict["Annots"] = append(annotsArr, *sigFieldRef)
-			ctx.Write.IncrementWithObjNr(sigField.Page.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(sigField.Page.ObjectNumber.Value())
 		} else if annotsRef, ok := annotsObj.(types.IndirectRef); ok {
-			annotsTableEntry, _ := ctx.FindTableEntryForIndRef(&annotsRef)
+			annotsTableEntry, _ := pdfCtx.FindTableEntryForIndRef(&annotsRef)
 			annotsArr, ok := annotsTableEntry.Object.(types.Array)
 			if !ok {
 				return fmt.Errorf("invalid annotations array: %v", annotsTableEntry.Object)
 			}
 			annotsTableEntry.Object = append(annotsArr, *sigFieldRef)
-			ctx.Write.IncrementWithObjNr(annotsRef.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(annotsRef.ObjectNumber.Value())
 		} else {
 			return fmt.Errorf("invalid /Annots entry types: %v", annotsObj)
 		}
 	}
 
-	catalogDict, err := ctx.Catalog()
+	catalogDict, err := pdfCtx.Catalog()
 	if err != nil {
 		return fmt.Errorf("failed to read a PDF catalog dictionary; %w", err)
 	}
@@ -138,31 +138,31 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 		if permsObj == nil { // No perms dict; insert one and update the catalog.
 			permsDict := types.NewDict()
 			permsDict["DocMDP"] = *sigField.Value
-			permsRef, err := ctx.IndRefForNewObject(permsDict)
+			permsRef, err := pdfCtx.IndRefForNewObject(permsDict)
 			if err != nil {
 				return fmt.Errorf("failed to insert a permissions dictionary; %w", err)
 			}
-			ctx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
 
 			catalogDict["Perms"] = *permsRef
-			ctx.Write.IncrementWithObjNr(ctx.Root.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(pdfCtx.Root.ObjectNumber.Value())
 		} else if permsRef, ok := permsObj.(types.IndirectRef); ok { // The /Perms entry is an indirect object; just update the permissions dictionary.
-			permsDict, err := ctx.DereferenceDict(permsRef)
+			permsDict, err := pdfCtx.DereferenceDict(permsRef)
 			if err != nil {
 				return fmt.Errorf("failed to dereference the permissions dictionary indirect reference; %w", err)
 			}
 			permsDict["DocMDP"] = *sigField.Value
-			ctx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
 		} else if permsDict, ok := permsObj.(types.Dict); ok { // The /Perms entry is a direct dictionary; insert it and update the catalog.
 			permsDict["DocMDP"] = *sigField.Value
-			permsRef, err := ctx.IndRefForNewObject(permsDict)
+			permsRef, err := pdfCtx.IndRefForNewObject(permsDict)
 			if err != nil {
 				return fmt.Errorf("failed to insert a permissions dictionary; %w", err)
 			}
-			ctx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(permsRef.ObjectNumber.Value())
 
 			catalogDict["Perms"] = *permsRef
-			ctx.Write.IncrementWithObjNr(ctx.Root.ObjectNumber.Value())
+			pdfCtx.Write.IncrementWithObjNr(pdfCtx.Root.ObjectNumber.Value())
 		} else {
 			return fmt.Errorf("invalid /Perms entry in the catalog, neither an indirect reference nor a dictionary: %v", permsObj)
 		}
@@ -175,52 +175,52 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 		formDict["Fields"] = types.Array{*sigFieldRef}
 		formDict["SigFlags"] = types.Integer(0b11) // TODO: model signature flags.
 
-		formRef, err := ctx.IndRefForNewObject(formDict)
+		formRef, err := pdfCtx.IndRefForNewObject(formDict)
 		if err != nil {
 			return fmt.Errorf("failed to insert a form dictionary; %w", err)
 		}
-		ctx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
+		pdfCtx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
 
 		catalogDict["AcroForm"] = *formRef
-		ctx.Write.IncrementWithObjNr(ctx.Root.ObjectNumber.Value())
+		pdfCtx.Write.IncrementWithObjNr(pdfCtx.Root.ObjectNumber.Value())
 
-		ctx.Form = formDict // Update the context, just in case.
+		pdfCtx.Form = formDict // Update the context, just in case.
 	} else if formRef, ok := formObj.(types.IndirectRef); ok { // The /AcroForm entry is an indirect reference; just update the form dictionary.
-		formDict, err := ctx.DereferenceDict(formRef)
+		formDict, err := pdfCtx.DereferenceDict(formRef)
 		if err != nil {
 			return fmt.Errorf("failed to dereference the form dictionary; %w", err)
 		}
 
 		formDict["Fields"] = append(formDict.ArrayEntry("Fields"), *sigFieldRef)
 		formDict["SigFlags"] = types.Integer(0b11)
-		ctx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
+		pdfCtx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
 
-		ctx.Form = formDict // Update the context, just in case.
+		pdfCtx.Form = formDict // Update the context, just in case.
 	} else if formDict, ok := formObj.(types.Dict); ok { // The /AcroForm entry is a direct dictionary; insert it and update the catalog.
 		formDict["Fields"] = append(formDict.ArrayEntry("Fields"), *sigFieldRef)
 		formDict["SigFlags"] = types.Integer(0b11)
 
-		formRef, err := ctx.IndRefForNewObject(formDict)
+		formRef, err := pdfCtx.IndRefForNewObject(formDict)
 		if err != nil {
 			return fmt.Errorf("failed to insert a form dictionary; %w", err)
 		}
-		ctx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
+		pdfCtx.Write.IncrementWithObjNr(formRef.ObjectNumber.Value())
 
 		catalogDict["AcroForm"] = *formRef
-		ctx.Write.IncrementWithObjNr(ctx.Root.ObjectNumber.Value())
+		pdfCtx.Write.IncrementWithObjNr(pdfCtx.Root.ObjectNumber.Value())
 
-		ctx.Form = formDict // Update the context, just in case.
+		pdfCtx.Form = formDict // Update the context, just in case.
 	} else {
 		return fmt.Errorf("invalid /AcroForm catalog entry, neither an indirect reference, nor a direct dictionary: %v", formObj)
 	}
 
 	// Update the context, just in case.
-	ctx.SignatureExist = true
-	ctx.AppendOnly = true
+	pdfCtx.SignatureExist = true
+	pdfCtx.AppendOnly = true
 
 	// Test write the increment to find out the actual byte range.
 
-	incBytes, err := writeInc(ctx, originPdfLen)
+	incBytes, err := writeInc(pdfCtx, originPdfLen)
 	if err != nil {
 		return fmt.Errorf("failed to find out actual byte range of a signature contents; %w", err)
 	}
@@ -246,7 +246,7 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 	dataBuf := bytes.NewBuffer(make([]byte, 0, actualByteRange[1]+actualByteRange[3]))
 	_, _ = dataBuf.Write(originPdfBytes)
 
-	incBytes, err = writeInc(ctx, originPdfLen)
+	incBytes, err = writeInc(pdfCtx, originPdfLen)
 	if err != nil {
 		return fmt.Errorf("failed to sign the actual data of a PDF; %w", err)
 	}
@@ -262,8 +262,8 @@ func (h *adobePkcs7DetachedSigHandler) Sign(ctx *model.Context, sig *Sig) error 
 	sig.Contents = marshaledSig // Update the model, just in case.
 
 	// Update the context for future increment writes.
-	ctx.Write.Offset = originPdfLen
-	ctx.Write.Increment = true
+	pdfCtx.Write.Offset = originPdfLen
+	pdfCtx.Write.Increment = true
 
 	return nil
 }
