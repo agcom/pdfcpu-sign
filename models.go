@@ -318,11 +318,15 @@ const (
 	TransformMethodFieldMdp    TransformMethod = "FieldMDP"
 )
 
+// DocMdpPerm - DocMDP stands for Document Modification Detection and Prevention; only to be used beside certification signatures.
 type DocMdpPerm int
 
 const (
-	DocMdpPermNoChanges                                    DocMdpPerm = 1
-	DocMdpPermFormFillInAndPageTemplateInstAndSign         DocMdpPerm = 2
+	// DocMdpPermNoChanges allows no changes to the document after signing.
+	DocMdpPermNoChanges DocMdpPerm = 1
+	// DocMdpPermFormFillInAndPageTemplateInstAndSign allows form fill-in and adding additional digital signatures after signing.
+	DocMdpPermFormFillInAndPageTemplateInstAndSign DocMdpPerm = 2
+	// DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot allows form fill-in, adding additional digital signatures, and adding annotations (for example commenting), post-signing.
 	DocMdpPermFormFillInAndPageTemplateInstAndSignAndAnnot DocMdpPerm = 3
 )
 
