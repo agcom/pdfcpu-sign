@@ -7,6 +7,8 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu/model"
 )
 
+// TODO: inline the usages and remove this redundant file.
+
 var strictValidConf = model.NewDefaultConfiguration()
 
 func init() {
