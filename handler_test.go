@@ -82,29 +82,10 @@ func testWithSample(t *testing.T, h SigHandler, sample string, sig *Sig) string 
 	err = pdfcpuapi.WriteIncrement(pdfCtx, outBuf)
 	require.NoError(t, err)
 
-	// PDFCPU relaxed validation.
+	// Write the output to a temporary file, for calling the validation procedure and returning the signed PDF file's path for further external tests if any.
 
 	outBytes := outBuf.Bytes()
 	outRs := bytes.NewReader(outBytes)
-
-	validConf := model.NewDefaultConfiguration()
-	validConf.ValidationMode = model.ValidationRelaxed
-
-	err = pdfcpuapi.Validate(outRs, validConf)
-	assert.NoError(t, err)
-	err = nil
-
-	// PDFCPU strict validation.
-
-	validConf.ValidationMode = model.ValidationStrict
-
-	err = pdfcpuapi.Validate(outRs, validConf)
-	if err != nil {
-		// TODO: enforce this validation; currently not enforced due to always reporting the `dict=type1FontDict required entry=FirstChar missing` validation error.
-		slog.Warn(fmt.Sprintf("Strict validation failed: %s.", err))
-	}
-
-	// Write the output to a temporary file, primarily for returning.
 
 	outFile, err := os.CreateTemp(tmpDir, strings.TrimSuffix(path.Base(sample), path.Ext(sample))+"-signed-*.pdf")
 	require.NoError(t, err)
@@ -123,15 +104,7 @@ func testWithSample(t *testing.T, h SigHandler, sample string, sig *Sig) string 
 	err = outFile.Sync()
 	require.NoError(t, err)
 
-	// QPDF validation.
-
-	qpdfOut, err := testutils.QpdfCheck(outFile.Name())
-	if errors.Is(err, exec.ErrNotFound) {
-		slog.Warn("The qpdf command is not available; skipping its validations.")
-	} else {
-		assert.NoError(t, err, qpdfOut)
-		err = nil
-	}
+	validatePdfFile(t, outFile.Name())
 
 	return outFile.Name()
 }
@@ -164,4 +137,35 @@ func newTestApprovalSig() *Sig {
 	}
 
 	return &sig
+}
+
+func validatePdfFile(t *testing.T, f string) {
+	// PDFCPU relaxed validation.
+
+	validConf := model.NewDefaultConfiguration()
+	validConf.ValidationMode = model.ValidationRelaxed
+
+	err := pdfcpuapi.ValidateFile(f, validConf)
+	assert.NoError(t, err)
+	err = nil
+
+	// PDFCPU strict validation.
+
+	validConf.ValidationMode = model.ValidationStrict
+
+	err = pdfcpuapi.ValidateFile(f, validConf)
+	if err != nil {
+		// TODO: enforce this validation; currently not enforced due to always reporting the `dict=type1FontDict required entry=FirstChar missing` validation error.
+		slog.Warn(fmt.Sprintf("Strict validation failed: %s.", err))
+	}
+
+	// QPDF validation.
+
+	qpdfOut, err := testutils.QpdfCheck(f)
+	if errors.Is(err, exec.ErrNotFound) {
+		slog.Warn("The qpdf command is not available; skipping its validations.")
+	} else {
+		assert.NoError(t, err, qpdfOut)
+		err = nil
+	}
 }
