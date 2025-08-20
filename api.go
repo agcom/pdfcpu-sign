@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
 	pdfcpuapi "github.com/pdfcpu/pdfcpu/pkg/api"
 	"github.com/pdfcpu/pdfcpu/pkg/pdfcpu"
@@ -76,4 +77,57 @@ func SignFile(h SigHandler, in string, out string, sig *Sig) error {
 	}
 
 	return nil
+}
+
+// SignType defines the signature type to use.
+type SignType string
+
+const (
+	// SignTypeCert is a signature type that can be applied once to a PDF document (it must be the first signature),
+	// and is always to be associated with the DocMDP field.
+	SignTypeCert SignType = "certification"
+
+	// SignTypeApproval is a signature type that can be applied multiple times to a PDF document.
+	SignTypeApproval = "approval"
+)
+
+// SignerInfo holds the signer (usually a person or a company) information;
+// it is only designed to be used in unmarshal positions (and not marshal positions) regarding ser/deserialization.
+type SignerInfo struct {
+	Name        string
+	Location    string
+	Reason      string
+	ContactInfo string
+	Time        time.Time
+}
+
+// SignInfo holds a signing procedure information;
+// it is only designed to be used in unmarshal positions (and not marshal positions) regarding ser/deserialization.
+type SignInfo struct {
+	Type       SignType
+	DocMdp     DocMdpPerm
+	SignerInfo *SignerInfo
+}
+
+func (si *SignInfo) ToSig() *Sig {
+	sig := Sig{}
+
+	if si.SignerInfo != nil {
+		sig.Name = si.SignerInfo.Name
+		sig.Reason = si.SignerInfo.Reason
+		sig.ContactInfo = si.SignerInfo.ContactInfo
+		sig.Location = si.SignerInfo.Location
+		sig.Time = si.SignerInfo.Time
+	}
+
+	if si.Type == SignTypeCert {
+		sig.References = []*SigRef{{
+			TransformMethod: TransformMethodDocMdp,
+			TransformParams: &TransformParamsDocMdp{
+				Perm: si.DocMdp,
+			},
+		}}
+	}
+
+	return &sig
 }
