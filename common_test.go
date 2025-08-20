@@ -104,21 +104,10 @@ func testWithSample(t *testing.T, h SigHandler, sample string, sig *Sig) string 
 	_, err = io.Copy(outBuf, in)
 	require.NoError(t, err)
 
-	// Ensure a final EOL to write the increment.
+	// Ensure a final EOL before writing the increment.
 
-	_, err = in.Seek(-1, io.SeekEnd)
+	err = ensureEol(in, outBuf)
 	require.NoError(t, err)
-	lastBytes := [1]byte{}
-	_, err = in.Read(lastBytes[:])
-	require.NoError(t, err)
-
-	switch lastBytes[0] {
-	case '\n', '\r':
-		break
-	default:
-		_, err := outBuf.Write([]byte{'\n'})
-		require.NoError(t, err)
-	}
 
 	// Read the original PDF.
 
