@@ -2,9 +2,9 @@
 
 A Go-native PDF signing library, on top of [pdfcpu](https://github.com/pdfcpu/pdfcpu).
 
-## Simple Usage Example
-
 Currently, the only implemented signature handler is Adobe PKCS#7 detached (CMS) which is by far the most widely used one.
+
+## Simple Usage Example
 
 ```go
 package main
