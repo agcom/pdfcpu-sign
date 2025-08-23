@@ -47,19 +47,19 @@ import_kert() {
 	kert_pass="${4-1234}"
 	kert_id="${5-$(rnd_num 4)}"
 
-	docker_compose run -q --quiet-build --quiet-pull --rm -v "$(realpath "$kert"):/tmp/golang-signserver-tests/kert.p12" -w /src/cmds/api/ softhsm2 \
-		sh -c "source ./softhsm2/common.zsh && _import_kert '$token_slot' '$token_pin' '/tmp/golang-signserver-tests/kert.p12' '$kert_pass' '$kert_id'"
+	docker_compose run -q --quiet-build --quiet-pull --rm -v "$(realpath "$kert"):/tmp/agcom-pdfcpu-sign-tests/kert.p12" -w /src/cmds/api/ softhsm2 \
+		sh -c "source ./softhsm2/common.zsh && _import_kert '$token_slot' '$token_pin' '/tmp/agcom-pdfcpu-sign-tests/kert.p12' '$kert_pass' '$kert_id'"
 }
 
 # This function is expected to be run in a SoftHSMv2 enabled environment.
 _import_kert() {
 	token_slot="$1"
 	token_pin="$2"
-	kert="${3-/tmp/golang-signserver-tests/kert.p12}"
+	kert="${3-/tmp/agcom-pdfcpu-sign-tests/kert.p12}"
 	kert_pass="${4-1234}"
 	kert_id="${5-$(rnd_num 4)}"
 
-	tmp_dir="$(mktemp -d /tmp/golang-signserver-tests-XXXXXXX)"
+	tmp_dir="$(mktemp -d /tmp/agcom-pdfcpu-sign-tests-XXXXXXX)"
 	cert_der_tmp="$(mktemp -p "$tmp_dir" cert.der-XXXXXXX)"
 	key_der_tmp="$(mktemp -p "$tmp_dir" key.der-XXXXXXX)"
 

@@ -15,7 +15,7 @@ cleanup() {
 
 trap 'cleanup' EXIT
 
-tmp_dir=$(mktemp -d /tmp/golang-signserver-tests-XXXXXXX)
+tmp_dir=$(mktemp -d /tmp/agcom-pdfcpu-sign-tests-XXXXXXX)
 key_tmp=$(mktemp -p "$tmp_dir" key.pem.XXXXXXX)
 cert_tmp=$(mktemp -p "$tmp_dir" cert.pem.XXXXXXX)
 

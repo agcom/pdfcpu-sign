@@ -2,7 +2,7 @@
 # The services are not intended to be run via `docker compose up`, but `docker compose run` (this file merely defined some defaults).
 # If you are using JetBrains GoLand, it supports seamless integration with Docker compose through run configurations.
 
-name: golang-signserver-tests
+name: agcom-pdfcpu-sign-tests
 
 services:
   softhsm2go:
