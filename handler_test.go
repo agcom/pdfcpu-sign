@@ -121,7 +121,7 @@ func newTestCertSig() *Sig {
 		Name:        "Alireza",
 		Reason:      "Test",
 		Location:    "Earth",
-		ContactInfo: "example@example.com",
+		ContactInfo: "example@example.org",
 	}
 
 	return &sig
@@ -133,7 +133,7 @@ func newTestApprovalSig() *Sig {
 		Name:        "Alireza",
 		Reason:      "Test",
 		Location:    "Earth",
-		ContactInfo: "example@example.com",
+		ContactInfo: "example@example.org",
 	}
 
 	return &sig

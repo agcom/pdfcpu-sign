@@ -32,7 +32,7 @@ func main() {
 				Name:        "Alireza",
 				Location:    "Earth",
 				Reason:      "Test",
-				ContactInfo: "example@example.com",
+				ContactInfo: "example@example.org",
 				Time:        time.Now(),
 			},
 		}).ToSig(),

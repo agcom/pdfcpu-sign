@@ -122,7 +122,7 @@ func Test_postSign(t *testing.T) {
 			Name:        "Alireza",
 			Location:    "Earth",
 			Reason:      "Test",
-			ContactInfo: "example@example.com",
+			ContactInfo: "example@example.org",
 			Time:        time.Now(),
 		},
 	}

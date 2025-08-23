@@ -45,7 +45,7 @@ The signature information model:
 		// Optional
 		"reason": "Test",
 		// Optional
-		"contactInfo": "example@example.com",
+		"contactInfo": "example@example.org",
 		// Optional
 		"time": "2023-12-28T21:30:00.000Z"
 		// Optional; ISO-8601 representation of a date-time.
@@ -72,7 +72,7 @@ Content-Type: application/json
 		"name": "Alireza",
 		"location": "Earth",
 		"reason": "Test",
-		"contactInfo": "example@example.com",
+		"contactInfo": "example@example.org",
 		"time": "2023-12-28T21:30:00.000Z"
 	}
 }
