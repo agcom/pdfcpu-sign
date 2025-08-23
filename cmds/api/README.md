@@ -1,10 +1,10 @@
-# Go Sign Server
+# PDFCPU Sign PKCS#11 Service
 
-The Go Sign Server service's functionality is **adding digital signatures to PDF documents**.
+An HTTP API application service to add digital signatures to PDF documents using keys over a [PKCS#11](https://en.wikipedia.org/wiki/PKCS_11) interface.
 
 ## Configuration
 
-Configuration of the service is done through setting the following environment variables before starting the service; we repeatedly refer to a key pair and its corresponding certificate as a kert.
+Configuration of the service is done through setting the following environment variables before starting the service; we repeatedly refer to a key pair and its corresponding certificate as a *kert*.
 
 | Environment Variable            | Default Value                         | Description                                                                                                            |
 |---------------------------------|---------------------------------------|------------------------------------------------------------------------------------------------------------------------|
@@ -30,16 +30,25 @@ There is only one HTTP API endpoint.
 Receives a signature information JSON object beside a PDF document, both bundled in a `multipart/form-data` request (`sign-info` and `pdf-file` fields); returns the signed PDF document.
 
 The signature information model:
+
 ```json
 {
-	"type": "certification", // Required; possible values are certification and approval.
-	"docMdp": "no-changes", // Required if type=certification; possible values are no-changes, form-sign, and form-sign-annot.
-	"signerInfo": { // Optional
-		"name": "Alireza", // Optional
-		"location": "Earth", // Optional
-		"reason": "Test", // Optional
-		"contactInfo": "example@example.com", // Optional
-		"time": "2023-12-28T21:30:00.000Z" // Optional; ISO-8601 representation of a date-time.
+	"type": "certification",
+	// Required; possible values are certification and approval.
+	"docMdp": "no-changes",
+	// Required if type=certification; possible values are no-changes, form-sign, and form-sign-annot.
+	"signerInfo": {
+		// Optional
+		"name": "Alireza",
+		// Optional
+		"location": "Earth",
+		// Optional
+		"reason": "Test",
+		// Optional
+		"contactInfo": "example@example.com",
+		// Optional
+		"time": "2023-12-28T21:30:00.000Z"
+		// Optional; ISO-8601 representation of a date-time.
 	}
 }
 ```

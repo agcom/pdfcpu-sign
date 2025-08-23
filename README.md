@@ -46,4 +46,4 @@ func main() {
 
 ## API Application
 
-There is an API application at [/cmds/api](./cmds/api) that utilizes keys over [PKCS#11](https://en.wikipedia.org/wiki/PKCS_11) interface.
+There is an API application at [/cmds/api](./cmds/api) that utilizes keys over a [PKCS#11](https://en.wikipedia.org/wiki/PKCS_11) interface.
