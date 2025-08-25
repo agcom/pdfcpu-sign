@@ -5,8 +5,6 @@ import (
 )
 
 type SigHandler interface {
-	// TODO: facilitate signing already existing signature field, and/or providing the signature field properties.
-
 	// Sign
 	// Beware that after calling this function, you should only call api.WriteIncrement on the given context.
 	Sign(pdfCtx *model.Context, sig *Sig) error
